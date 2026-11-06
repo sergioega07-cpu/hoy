@@ -1,0 +1,18 @@
+[
+{"id":"huevo","n":"Huevo entero, crudo","u":"1 unidad (50 g)","g":50,"p":12.56,"c":0.72,"f":9.51,"k":143,"fdc":171287},
+{"id":"pollo","n":"Pechuga de pollo, asada","u":"100 g cocida","g":100,"p":31.02,"c":0,"f":3.57,"k":165,"fdc":171477},
+{"id":"arroz","n":"Arroz blanco, crudo (pesar en seco)","u":"60 g en seco","g":60,"p":7.13,"c":79.95,"f":0.66,"k":365,"fdc":169756},
+{"id":"avena","n":"Avena, seca","u":"40 g","g":40,"p":13.15,"c":67.7,"f":6.52,"k":379,"fdc":173904},
+{"id":"platano","n":"Plátano","u":"1 mediano (118 g)","g":118,"p":1.09,"c":22.84,"f":0.33,"k":89,"fdc":173944},
+{"id":"pan","n":"Pan de trigo, tostado","u":"1 rebanada (30 g)","g":30,"p":12.96,"c":55.77,"f":4.27,"k":313,"fdc":172687},
+{"id":"yogur","n":"Yogur griego natural, bajo en grasa","u":"1 pote (170 g)","g":170,"p":9.95,"c":3.94,"f":1.92,"k":73,"fdc":170903},
+{"id":"palta","n":"Palta","u":"1/2 palta (70 g)","g":70,"p":2,"c":8.53,"f":14.66,"k":160,"fdc":171705},
+{"id":"leche","n":"Leche entera","u":"1 taza (244 g)","g":244,"p":3.15,"c":4.8,"f":3.25,"k":61,"fdc":171265},
+{"id":"atun","n":"Atún fresco, crudo","u":"100 g","g":100,"p":24.4,"c":0,"f":0.49,"k":109,"fdc":175159},
+{"id":"papa","n":"Papa con cáscara, cruda","u":"1 mediana (170 g)","g":170,"p":2.05,"c":17.49,"f":0.09,"k":77,"fdc":170026},
+{"id":"pasta","n":"Pasta, seca (pesar en seco)","u":"80 g en seco","g":80,"p":13.04,"c":74.67,"f":1.51,"k":371,"fdc":169736},
+{"id":"carne","n":"Carne molida 85/15, cocida","u":"100 g cocida","g":100,"p":25.93,"c":0,"f":15.41,"k":250,"fdc":174032},
+{"id":"salmon","n":"Salmón de cultivo, crudo","u":"150 g","g":150,"p":20.42,"c":0,"f":13.42,"k":208,"fdc":175167},
+{"id":"aceite","n":"Aceite de oliva","u":"1 cda (13.5 g)","g":13.5,"p":0,"c":0,"f":100,"k":884,"fdc":171413},
+{"id":"manzana","n":"Manzana con cáscara","u":"1 mediana (182 g)","g":182,"p":0.26,"c":13.81,"f":0.17,"k":52,"fdc":171688}
+]
