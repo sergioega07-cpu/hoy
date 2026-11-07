@@ -30,60 +30,138 @@ function weightGap(kg){
 const weightDate=s=>s.split('-').reverse().join('/');
 function weightCard(){
  const records=weightRecords(),latest=records[0];
- return `<section class="card weight-card" aria-labelledby="weight-title"><h2 id="weight-title">Peso</h2>
- <p class="muted">Peso actual · ${weightDate(latest.date)}</p><p class="weight-current"><strong>${kgFmt(latest.kg)}</strong> kg</p>
- <p>Meta: <strong>79–81 kg</strong></p><p>${weightGap(latest.kg)}</p>
- <form id="weight-form"><div class="grid2"><label>Peso (kg)<input id="weight-kg" name="kg" type="text" inputmode="decimal" placeholder="88,9" pattern="[0-9]+([.,][0-9]+)?" required></label>
- <label>Fecha<input id="weight-date" name="date" type="date" value="${today()}" required></label></div>
+ return `<section class="card weight-card" aria-labelledby="weight-title"><p class="kicker" id="weight-title">Peso</p>
+ <p class="muted">Actual · ${weightDate(latest.date)}</p>
+ <p class="weight-current"><strong>${kgFmt(latest.kg)}</strong><span> kg</span></p>
+ <p class="weight-meta">Meta 79–81 kg · ${weightGap(latest.kg)}</p>
+ <form id="weight-form"><div class="grid2"><label><span class="kicker">Peso (kg)</span><input id="weight-kg" name="kg" type="text" inputmode="decimal" placeholder="88,9" pattern="[0-9]+([.,][0-9]+)?" required></label>
+ <label><span class="kicker">Fecha</span><input id="weight-date" name="date" type="date" value="${today()}" required></label></div>
  <button class="prim" type="submit">Anotar</button><p class="muted">Si anotas la misma fecha, reemplaza el registro.</p></form>
- <h3>Registros recientes</h3><ul class="weight-records">${records.slice(0,10).map(r=>`<li><time datetime="${r.date}">${weightDate(r.date)}</time><strong>${kgFmt(r.kg)} kg</strong></li>`).join('')}</ul>
+ <p class="kicker">Registros recientes</p><ul class="weight-records">${records.slice(0,10).map(r=>`<li><time datetime="${r.date}">${weightDate(r.date)}</time><strong>${kgFmt(r.kg)} kg</strong></li>`).join('')}</ul>
  <p class="muted">Datos guardados solo en este navegador.</p></section>`;
 }
 
-// ---------- Entrenamiento: semana 1 de retorno ----------
-const ENTRADA='Entrada: 4–5 min de bicicleta fácil.';
-const W={
- 'Acondicionamiento':{
-  1:{p:['Air squats 2×8','Ring rows 2×6'],c:'10–12 min de bicicleta fácil, continuo'},
-  2:{p:['Peso muerto liviano 2×6','Press de hombros 2×6–8'],c:'10–12 min de remo suave'},
-  3:{p:['3 rondas sin competir: 1 min remo + 6 air squats + 6 ring rows','Descanso 60–90 s entre rondas'],c:'10 min de remo o bicicleta fácil (alternar 1 min si tienes ambos)'}},
- 'Hipertrofia':{
-  1:{p:['Goblet squat 2×8–10','Peso rumano (RDL) 2×8–10'],x:['Ring rows 2×8–12','Flexiones 2×5–8'],c:'8–10 min de bicicleta fácil'},
-  2:{p:['Peso rumano (RDL) 2×8–10','Press de hombros 2×8–10'],x:['Remo con mancuerna 2×10–12','Puente de glúteo 2×10–12'],c:'8–10 min de remo o bicicleta fácil'},
-  3:{p:['Goblet squat 2×8–10','Press de banca 2×8–12'],x:['Remo con mancuerna 2×10–12','Sit-ups 2×8'],c:'8–10 min de remo o bicicleta fácil'}},
- 'Calistenia':{
-  1:{p:['Air squat 2×8–12','Ring rows 2×6–10'],x:['Flexiones 2×5–8','Puente de glúteo 2×10–12','Plancha 2×15–20 s'],c:'8–10 min de bicicleta fácil'},
-  2:{p:['Puente de glúteo 2×10–12','Flexiones 2×5–8'],x:['Ring rows 2×6–10','Plancha 2×15–20 s'],c:'8–10 min de remo o bicicleta fácil'},
-  3:{p:['Air squat 2×8–12','Dominadas asistidas 2×5–8 (o ring rows)'],x:['Flexiones 2×5–8','Sit-ups 2×8'],c:'8–10 min de remo o bicicleta fácil'}},
- 'CrossFit de retorno':{
-  1:{p:['Front squat 2×5 cómodos','Squat snatch con barra vacía o muy liviana 2×5'],x:['Ring rows 2×6'],c:'10–12 min de bicicleta fácil'},
-  2:{p:['Peso muerto liviano 2×5','Push press liviano 2×5'],c:'10–12 min de remo suave o trote suave'},
-  3:{p:['Sentadilla con pausa abajo 2×5, liviana','Hang clean liviano 2×3'],x:['Ring rows 2×6'],c:'10 min de remo o bicicleta fácil'}},
- 'Trote':{
-  1:{run:'12–20 min de trote suave (ritmo en que puedas hablar)',x:['Al terminar: air squats 2×8']},
-  2:{run:'12–20 min de trote suave (o tramos de caminata y trote)'},
-  3:{run:'12–20 min de trote suave, o 10 min de trote + 5 min de caminata'}},
- 'Mixto':{
-  1:{p:['Goblet squat 2×8','Ring rows 2×8'],c:'10 min de bicicleta fácil'},
-  2:{p:['Peso rumano (RDL) 2×8','Press de hombros 2×8'],c:'10 min de remo o trote suave'},
-  3:{p:['Air squat 2×8–10','Ring rows 2×6–8'],c:'10 min de remo o bicicleta fácil'}}
-};
-const RAMAS=Object.keys(W), TIEMPOS=['15–20 min','25–35 min','40+ min'];
-// Lun=d1, Mié=d2, Vie=d3; Mar→d1, Jue→d2, Sáb/Dom→d3
-const tplDay=s=>({0:3,1:1,2:1,3:2,4:2,5:3,6:3})[dow(s)];
-function sesion(rama,dia,tiempo){
- const t=W[rama][dia]; let h='';
- const corta=tiempo===TIEMPOS[0], larga=tiempo===TIEMPOS[2];
- if(t.run){
-  h+=`<ul><li>${t.run}${larga?' — si te sientes bien, 2–3 min extra fáciles':''}</li>${!corta&&t.x?t.x.map(e=>`<li>${e}</li>`).join(''):''}</ul>`;
-  if(corta)h+=`<p class="muted">Versión corta: quédate en el extremo bajo del tiempo.</p>`;
+// ---------- Entrenamiento: una elección, una sesión; dosis de retorno propuestas ----------
+const TIPOS=['Hipertrofia','CrossFit de retorno','Trote / 2400 m','Híbrido'];
+const FUENTES={hss:'https://www.hss.edu/health-library/move-better/static-dynamic-stretching',afmc:'https://www.afmc.af.mil/News/Article-Display/Article/2664126/improving-run-times-for-the-pt-test/',smith:'https://www.military.com/military-fitness/fitness-test-prep/improving-your-pft-run-time'};
+function trainingChoice(s){
+ const legacy={Mixto:'Híbrido',Trote:'Trote / 2400 m',Acondicionamiento:'Híbrido',Calistenia:'CrossFit de retorno'};
+ return {...s,rama:TIPOS.includes(s.rama)?s.rama:(legacy[s.rama]||''),minutosTotal:s.minutosTotal??'',minutosHechos:s.minutosHechos??0,cardioHecho:s.cardioHecho??0};
+}
+function trainingBase(tipo,date){
+ const day=dow(date),legs=day===3||day===6,chest=day===1||day===4;
+ const pattern=legs?'piernas':chest?'pecho / tríceps':'espalda / bíceps';
+ const base={dynamic:'Balanceos de piernas y estocadas caminando, controlados; movilidad suave de tobillos y cadera.',warm:'Marcha o trote fácil',specific:'Ensaya sentadilla y bisagra sin carga, sin fatiga.',static:'Cuádriceps e isquios, sin dolor.',blocks:[]};
+ if(tipo==='Hipertrofia'){
+  base.name=pattern; base.source='Hipertrofia ID47 · '+pattern;
+  base.warm=legs?'Bicicleta fácil':'Remo suave';
+  base.dynamic=legs?base.dynamic:'Movilidad dinámica de hombros y codos, giros suaves de torso; sin sostener al límite.';
+  base.specific=legs?'Ensaya sentadilla sin carga y bisagra; una aproximación liviana antes de la barra.':'Ensaya el press o remo del día con carga muy liviana, sin fatiga.';
+  base.static=legs?base.static:'Hombro posterior y brazos, suave y sin dolor.';
+  base.blocks=legs?[
+   {name:'Sentadilla con barra',source:base.source,purpose:'Conservar el patrón principal de piernas',items:['2×6–8; baja con control'],min:6,max:8},
+   {name:'Estocadas con mancuernas',source:base.source,purpose:'Control unilateral',items:['1×6 por lado'],min:4,max:4},
+   {name:'Peso muerto con barra',source:base.source,purpose:'Bisagra; accesorio que se retira primero',items:['1×6 liviano; omitir si la técnica se pierde'],min:4,max:4}
+  ]:chest?[
+   {name:'Press inclinado con barra',source:base.source,purpose:'Empuje principal',items:['2×6–8'],min:6,max:8},
+   {name:'Extensión de tríceps en polea',source:base.source,purpose:'Complemento de empuje',items:['1–2×8–10'],min:4,max:5},
+   {name:'Aperturas con mancuernas en banco',source:base.source,purpose:'Accesorio; no hacer fondos al fallo',items:['1×8–10 en rango cómodo'],min:4,max:4}
+  ]:[
+   {name:'Remo con barra',source:base.source,purpose:'Tracción principal',items:['2×6–8'],min:6,max:8},
+   {name:'Jalón al pecho',source:base.source,purpose:'Tracción vertical',items:['1–2×8–10'],min:4,max:5},
+   {name:'Curl martillo con mancuernas',source:base.source,purpose:'Accesorio de brazos',items:['1×8–10'],min:4,max:4}
+  ];
+ }else if(tipo==='CrossFit de retorno'){
+  base.name='Técnica → fuerza → gimnasia → motor corto';base.source='Semana 10 + Fundamentos ID37';
+  base.warm='Bicicleta fácil';
+  base.dynamic+=' Movilidad suave de hombros y muñecas para barra y anillas.';
+  base.specific='Complejo de barra vacía, Semana 10: snatch-grip RDL → pull bajo rodilla → muscle snatch. Una pasada de 3 repeticiones por movimiento, solo si dominas la técnica; si no, ensaya la bisagra sin carga. Selección reducida, no el complejo completo.';
+  base.blocks=[
+   {name:'Front squat técnico',source:'Semana 10 · fuerza',purpose:'Sentadilla antes de la fatiga',items:['2×5 cómodas; sin porcentajes ni máximos'],min:6,max:8},
+   {name:'Ring rows, por calidad',source:'Fundamentos ID37 · skill de tracción',purpose:'Gimnasia controlada, sin MU ni invertidas',items:['2×6; anillas altas si hace falta'],min:4,max:5},
+   {name:'Plancha',source:'Fundamentos ID37 · midline',purpose:'Control del tronco, opcional',items:['2×15–20 s, descanso libre'],min:3,max:3}
+  ];
+ }else if(tipo==='Híbrido'){
+  base.name='Fuerza + skill + apoyo al 2400 m';base.source='Fundamentos ID37 / Semana 10 + AFMC';
+  base.blocks=[
+   {name:'Goblet squat con control',source:'Fundamentos ID37 · sentadilla',purpose:'Fuerza útil para el apoyo de carrera',items:['2×6–8, baja lento sin forzar profundidad'],min:6,max:8},
+   {name:'Ring rows',source:'Fundamentos ID37 · skill',purpose:'Tracción sin agotar las piernas',items:['2×6–8; ajusta inclinación'],min:4,max:5},
+   {name:'Peso rumano',source:'Semana 10 · accesorio posterior',purpose:'Bisagra opcional; sale primero si falta tiempo',items:['1×8 liviano'],min:4,max:4}
+  ];
  }else{
-  const items=corta?t.p:[...t.p,...(t.x||[])];
-  h+=`<p class="muted">${ENTRADA}</p><ul>${items.map(e=>`<li>${e}</li>`).join('')}</ul>`;
-  if(corta)h+=`<p class="muted">Versión 15–20: preparación + 2 patrones principales. Se recorta el final, no el descanso.</p>`;
-  h+=`<div class="cardio"><b>Cardio</b><br>${corta?'5–6 min fáciles':t.c}${larga?' + 2–3 min extra fáciles':''}</div>`;
+  base.name='2400 m · construir base';base.source='Excel ID7 + método AFMC';
+  base.specific='Marcha técnica y ensayo de apoyo cómodo, sin sprints ni prueba máxima.';
+  base.blocks=[{name:'Control de tronco',source:'Fundamentos ID37 · plancha / barquito',purpose:'Apoyo a carrera sin añadir otro WOD',items:['Plancha 2×15–20 s, sin aguantar la respiración'],min:3,max:3}];
  }
- h+=`<p class="muted">Carga: la de hoy, con 3–4 repeticiones en reserva. Técnica olímpica con barra vacía o liviana. Ritmo de cardio: que puedas hablar.</p>`;
+ return base;
+}
+// Presupuesto en minutos: incluye descansos/transiciones; nunca se exige llenar el tiempo sobrante.
+function trainingPlan(s,date){
+ const total=Number(s.minutosTotal),already=Number(s.minutosHechos),remaining=Math.max(0,total-already);
+ const cardioDone=Number(s.cardioHecho)||0,cardioTarget=Math.max(0,20-cardioDone);
+ const warmDone=already>0&&s.calento===true;
+ const base=trainingBase(s.rama,date),run=s.rama==='Trote / 2400 m';
+ const plan={...base,preparation:base,total,already,remaining,cardioDone,cardioTarget,warmDone,run,blocks:[],warm:0,dynamic:0,specific:0,exit:0,cardio:0,middle:0,last:0,margin:0};
+ if(!remaining)return plan;
+ if(remaining<14&&!warmDone){
+  plan.short=true;plan.warm=Math.min(5,remaining);plan.dynamic=remaining>=7?1:0;plan.exit=remaining>=8?1:0;
+  // Marchar para entrar en calor también cuenta en el total de cardio.
+  plan.cardio=Math.min(cardioTarget,plan.warm+Math.max(0,remaining-plan.warm-plan.dynamic-plan.exit));
+  plan.last=Math.max(0,plan.cardio-Math.min(plan.warm,plan.cardio));
+  plan.margin=Math.max(0,remaining-plan.warm-plan.dynamic-plan.exit-plan.last);return plan;
+ }
+ plan.warm=warmDone?0:5;plan.dynamic=warmDone?1:2;plan.specific=run?1:2;plan.exit=2;
+ if(remaining<plan.warm+plan.dynamic+plan.specific+plan.exit){plan.short=true;plan.warm=0;plan.dynamic=0;plan.specific=0;plan.exit=Math.min(remaining,2);plan.margin=remaining-plan.exit;return plan}
+ const candidates=base.blocks.filter((_,i)=>!s[['principalHecho','complementoHecho','accesorioHecho'][i]]);
+ const mainReserve=run?0:(candidates[0]?.min||0);
+ const skillReserve=!run&&remaining>=30?(candidates[1]?.min||0):0;
+ const overhead=plan.warm+plan.dynamic+plan.specific+plan.exit;
+ const firstCardio=Math.min(plan.warm,cardioTarget);
+ const additional=Math.max(0,remaining-overhead-mainReserve-skillReserve);
+ plan.cardio=firstCardio+Math.min(Math.max(0,cardioTarget-firstCardio),additional);
+ let work=Math.max(0,remaining-overhead-(plan.cardio-firstCardio));
+ for(const [i,b] of candidates.entries()){if(work<b.min)break;const reserve=candidates.slice(i+1).reduce((n,x)=>n+x.min,0);const minutes=Math.min(b.max,work-reserve>=b.min?work-reserve:b.min);plan.blocks.push({...b,minutes});work-=minutes}
+ plan.omitted=candidates.filter(b=>!plan.blocks.some(x=>x.name===b.name)).map(b=>b.name);
+ plan.short=!run&&!plan.blocks.length;
+ plan.middle=Math.floor((plan.cardio-firstCardio)/2);plan.last=plan.cardio-firstCardio-plan.middle;
+ plan.margin=work;return plan;
+}
+function trainingChooser(onHoy=false){
+ const s=trainingChoice(dia()),ready=s.rama&&s.minutosTotal!=='';
+ let h=`<form id="training-form" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required><option value="">Elige tu sesión…</option>${TIPOS.map(t=>`<option ${s.rama===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label>
+ <div class="grid2"><label><span class="kicker">Minutos disponibles</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required value="${esc(s.minutosTotal)}" placeholder="Ej. 40"></label><label><span class="kicker">Minutos ya hechos</span><input name="already" type="number" inputmode="numeric" min="0" step="1" required value="${esc(s.minutosHechos)}"></label></div>
+ <p class="muted">Disponibles = tiempo total de esta sesión, incluido lo que ya hiciste. Ej.: 40 − 20 = 20 min por hacer.</p>
+ <details class="training-started" ${s.minutosHechos>0?'open':''}><summary>Si ya empezaste</summary><p class="muted">Los minutos no dicen qué hiciste. Marca lo completado para no repetirlo.</p>
+ <label class="check"><input name="calento" type="checkbox" ${s.calento?'checked':''}>Ya elevé temperatura y sigo caliente</label>
+ <label><span class="kicker">Cardio ya hecho (min)</span><input name="cardioDone" type="number" inputmode="numeric" min="0" step="1" value="${esc(s.cardioHecho)}"></label>
+ ${[['principalHecho','Bloque principal listo'],['complementoHecho','Segundo bloque listo'],['accesorioHecho','Accesorio listo']].map(([k,t])=>`<label class="check"><input type="checkbox" name="${k}" ${s[k]?'checked':''}>${t}</label>`).join('')}</details>
+ <button type="submit" class="prim">Adaptar mi sesión</button></form>`;
+ if(ready)h+=sesion(trainingPlan(s,D),s.rama);
+ if(onHoy&&ready){h+=`<div class="row"><button class="${s.hecho?'on':''}" data-hecho>${s.hecho?'Sesión hecha ✓':'Marcar sesión hecha'}</button></div>`}
+ // Conserva acceso al audio incluso al cambiar la elección o sin tiempo restante.
+ if(onHoy&&s.hecho)h+=`<h3>Registro para Charles</h3>${recUI('entreno:'+D,'Cuéntale qué hiciste, carga real, cardio, cómo te sentiste y si algo dolió o quedó corto.')}<p class="muted">Queda en este teléfono. Envíamelo en este chat y se lo paso a Charles.</p>`;
+ if(!onHoy&&ready)h+='<p class="muted">La misma sesión queda en Hoy; al marcarla hecha aparece tu registro para Charles.</p>';
+ return h;
+}
+function sesion(p,tipo){
+ let h=`<article class="training-session"><p class="kicker">Tu sesión · ${p.remaining} min por hacer</p><h3>${esc(tipo)} · ${p.name}</h3><p class="source">Base: ${p.source}. Selección y dosis reducidas propuestas para volver desde cero; no es la hoja completa.</p>`;
+ if(tipo==='Hipertrofia')h+='<p class="muted">ID47: pecho/tríceps L–J · espalda/bíceps M–V · piernas X–S. Es la selección por día, no seis sesiones obligatorias.</p>';
+ if(dow(D)===0)h+='<p class="muted">Domingo: descanso sugerido. El patrón de hipertrofia M–V se muestra como alternativa, no como obligación.</p>';
+ if(!p.remaining)return h+'<p>No queda tiempo pendiente. No se añade otro entreno. Puedes cerrar la sesión y grabar tu registro en Hoy.</p></article>';
+ h+=`<section class="session-block"><h4>Elongación · dinámica</h4><p>${p.dynamic?p.dynamic+' min: '+p.preparation.dynamic:'Pendiente hasta elevar temperatura; no se fuerza en frío.'}</p></section>`;
+ h+=`<p class="muted">Orden real: primero 5–10 min para elevar temperatura, después dinámica y preparación específica. Nada de elongación intensa en frío. <a href="${FUENTES.hss}" target="_blank" rel="noopener">HSS</a>.</p>
+ <section class="session-block"><h4>Calentamiento · general + específico</h4><p>${p.warm?`${p.warm} min: ${p.preparation.warm}.`:p.warmDone?'Ya calentaste: se omite la entrada general. Si te enfriaste, vuelve a calentar antes de cargar.':'Sin tiempo para preparar carga: no hagas fuerza ni sprints.'} ${p.warm&&p.warm<5?'Solo movimiento fácil: el tiempo no alcanza para preparar fuerza.':''} ${p.specific?`Después de la dinámica, ${p.specific} min: ${p.preparation.specific}`:''}</p><p class="source">Preparación: HSS${tipo==='CrossFit de retorno'?' + complejo reducido de Semana 10':''}.</p></section>`;
+ if(p.short)h+='<p class="muted">Tiempo corto: solo preparación / movimiento fácil y salida. Se omiten barra y accesorios, no se aprietan los descansos.</p>';
+ if(p.omitted?.length)h+=`<p class="muted">Fuera por tiempo: ${p.omitted.join(', ')}. No se añaden al final.</p>`;
+ const cardioMode=tipo==='Hipertrofia'?(p.name==='piernas'?'bicicleta fácil':'remo suave'):tipo==='CrossFit de retorno'?'bicicleta fácil; motor corto sin competir':'marcha / trote conversacional; camina si hace falta';
+ const cardioBlock=(n,label)=>n?`<section class="cardio"><h4>${label} · ${n} min</h4><p>${cardioMode}. ${tipo==='Híbrido'||p.run?'Apoyo al 2400 m: construir tolerancia, no correr al ritmo meta.':''}</p><p class="source">${tipo==='Hipertrofia'?'ID47 · cardio redistribuido':tipo==='CrossFit de retorno'?'Semana 10 · motor reducido':'AFMC · base de carrera'}.</p></section>`:'';
+ p.blocks.forEach((b,i)=>{h+=`<section class="session-block"><h4>${i+1}. ${b.name} · hasta ${b.minutes} min</h4><p class="source">Base: ${b.source} · ${b.purpose}.</p><ul>${b.items.map(x=>`<li>${x}</li>`).join('')}</ul><p class="muted">Descansa 60–120 s o más. El tiempo incluye descanso y transiciones; si no alcanza, quita una serie, no el descanso.</p></section>`;if(i===0)h+=cardioBlock(p.middle,'Cardio entre bloques')});
+ if(!p.blocks.length)h+=cardioBlock(p.middle,'Cardio · tramo central');
+ h+=cardioBlock(p.last,tipo==='CrossFit de retorno'?'Motor corto / salida fácil':'Cardio · tramo de salida');
+ h+=`<p class="cardio"><b>Cardio distribuido, no extra</b><br>${p.cardioDone} min ya registrados + ${p.cardio} min de cardio pendientes en esta ficha${p.warm&&p.cardio>=p.warm?' (incluye la entrada fácil)':''}. ${p.cardioDone+p.cardio<20?'Se reduce el objetivo de 20 min por el tiempo disponible; no se recupera al final.':'Objetivo de 20 min cubierto; no añadas otros 20.'}${p.warm>Math.min(p.warm,p.cardio)?' La preparación general necesaria supera el saldo de cardio; no se omite para cuadrar la cifra.':''}</p>
+ <section class="session-block"><h4>Elongación estática · salida</h4><p>${p.exit?p.exit+' min reservados.':'Sin tiempo reservado: déjala para después, con el cuerpo caliente.'} ${p.preparation.static} Sostén suave 20–30 s por lado, sin rebotes; completa aparte si no cabe. No se hace en frío. Base: HSS.</p></section>
+ <p class="muted">Carga: la de hoy, 3–4 repeticiones en reserva. No porcentajes de tus marcas antiguas. ${p.margin?`${p.margin} min quedan como margen: no es obligación llenarlos.`:''} Los accesorios salen primero si falta tiempo. Para si duele la rodilla o la lumbar; ante mareo, dolor de pecho o falta de aire desproporcionada, detén y consulta.</p>`;
+ h+=`<details class="training-sources"><summary>2400 m, fuentes y pendientes</summary><p>Prioridad: 2400 m militares. Referencia matemática para 9:30: 3:57,5/km o 1:35/400 m; sub-9:30 exige algo más rápido. <b>No es tu ritmo actual ni el de esta sesión.</b></p><p>Tu Excel ID7 (Sheet1, D48 y D106–109) usa ritmos relativos a 5k/10k. Se recupera esa lógica, no sus 10×1000 m ni el chaleco.</p><p>Pendiente con Charles: marca actual de 2400 m y tolerancia reciente. AFMC construye base varias semanas (2–3 exposiciones de 20 min continuos) antes de intervalos controlables, una vez por semana, con dos días completos de recuperación. Smith fracciona una meta razonable a partir de una marca medida. No sumamos ambos programas ni fijamos series rápidas sin esos datos.</p><p>5k, 10k y 42k siguen pendientes para etapas posteriores, no cuatro planes juntos. Everest, Lace Up / Professor Chaos y Boat Race quedan como referencias de formatos: sus volúmenes completos no se prescriben hoy.</p><p><a href="${FUENTES.afmc}" target="_blank" rel="noopener">AFMC · base e intervalos</a> · <a href="${FUENTES.smith}" target="_blank" rel="noopener">Stew Smith · ritmo relativo</a> · <a href="${FUENTES.hss}" target="_blank" rel="noopener">HSS · preparación</a></p></details></article>`;
  return h;
 }
 
@@ -124,19 +202,14 @@ function setDia(p){save(dayKey(D),{...dia(),...p});render()}
 const opts=(list,cur,attr)=>list.map(x=>`<button class="${x===cur?'on':''}" data-${attr}="${esc(x)}">${esc(x)}</button>`).join('');
 
 function vHoy(){
- const s=dia(),dd=tplDay(D);
+ const s=dia();
  let h=`${weightCard()}<section class="card"><h2>Ánimo</h2><div class="row">${opts(['Bien','Normal','Cansado','Bajo'],s.animo,'animo')}</div></section>
  <section class="card"><h2>Recuperación (Whoop, manual)</h2><div class="row">
  ${[['Verde','g'],['Amarillo','y'],['Rojo','r']].map(([n,c])=>`<button class="${c} ${s.rec===n?'on':''}" data-rec="${n}">${n}</button>`).join('')}</div>
  ${s.rec==='Rojo'?'<p class="muted">Recuperación en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
  <section class="card"><h2>Entrenamiento</h2><p class="muted">¿Vas a entrenar?</p><div class="row">${opts(['Sí','No'],s.entrena,'entrena')}</div>`;
- if(s.entrena==='Sí'){
-  h+=`<h3>Rama</h3><div class="row">${opts(RAMAS,s.rama,'rama')}</div><h3>Tiempo</h3><div class="row">${opts(TIEMPOS,s.tiempo,'tiempo')}</div>`;
-  if(s.rama&&s.tiempo)h+=`<h3>${esc(s.rama)} · Día ${dd} · ${esc(s.tiempo)}</h3>${dow(D)===0?'<p class="muted">Es domingo: se sugiere descanso, pero tú decides.</p>':''}${sesion(s.rama,dd,s.tiempo)}
-   <div class="row"><button class="${s.hecho?'on':''}" data-hecho>${s.hecho?'Sesión hecha ✓':'Marcar sesión hecha'}</button></div>
-   ${s.hecho?`<h3>Registro para Charles</h3>${recUI('entreno:'+D,'Cuéntale cómo salió el entreno: qué hiciste, cómo te sentiste, si algo dolió o quedó corto.')}<p class="muted">Queda en este teléfono. Envíamelo en este chat y se lo paso a Charles.</p>`:''}`;
- }
- h+=`<p class="muted">Semana 1 de retorno</p></section>
+ if(s.entrena==='Sí')h+=trainingChooser(true);
+ h+=`</section>
  <section class="card"><h2>Macros de hoy</h2>${resumen(D)}
   <h3>Extra de hoy</h3>${pickerHTML('Extras')}${listaHTML(D,'Extras')}</section>
  <section class="card"><h2>Estudio</h2><p>${CALC.t}</p><button data-go="estudiar">Desarrollar</button> ${s.calc?`<span class="muted">· ${s.calc}</span>`:''}</section>
@@ -166,9 +239,7 @@ function vComida(){
  return h;
 }
 function vEntrenar(){
- const dd=tplDay(D);let h=`<section class="card"><h2>Semana 1 de retorno</h2><p class="muted">Una rama por sesión. Lun = Día 1 · Mié = Día 2 · Vie = Día 3. Hoy corresponde Día ${dd}. Sesión estándar 25–35 min.</p></section>`;
- RAMAS.forEach(r=>{h+=`<section class="card"><h2>${r}</h2>`;[1,2,3].forEach(d=>h+=`<h3>Día ${d}</h3>${sesion(r,d,TIEMPOS[1])}`);h+='</section>'});
- return h;
+ return `<section class="card"><h2>Tu entrenamiento</h2><p class="accent">Elige lo de hoy, no una planilla completa.</p>${trainingChooser()}</section>`;
 }
 function vEstudiar(){
  const s=dia();
@@ -213,8 +284,6 @@ document.addEventListener('click',async e=>{
  if(d.animo)return setDia({animo:d.animo});
  if(d.rec)return setDia({rec:d.rec});
  if(d.entrena)return setDia({entrena:d.entrena});
- if(d.rama)return setDia({rama:d.rama});
- if(d.tiempo)return setDia({tiempo:d.tiempo});
  if('hecho' in d)return setDia({hecho:!dia().hecho});
  if(d.calc)return setDia({calc:d.calc,calcTxt:$('#calcTxt').value});
  if(d.mf!==undefined){const n=+d.mf;save('hoy:menuFecha',n===0?null:addDays(menuTarget(),n));return render()}
@@ -236,6 +305,12 @@ document.addEventListener('click',async e=>{
    await navigator.share({files:[file],title:file.name})}catch(err){if(err.name!=='AbortError')alert('No se pudo compartir: '+err.message)}}
 });
 document.addEventListener('submit',e=>{
+ if(e.target.id==='training-form'){
+  e.preventDefault();const f=new FormData(e.target),total=Number(f.get('total')),already=Number(f.get('already')),cardio=Number(f.get('cardioDone'));
+  if(!TIPOS.includes(f.get('rama'))||![total,already,cardio].every(n=>Number.isSafeInteger(n)&&n>=0)||cardio>already)return alert('Usa minutos enteros desde cero; el cardio ya hecho no puede superar los minutos ya hechos.');
+  const started=already>0;
+  return setDia({rama:f.get('rama'),minutosTotal:total,minutosHechos:already,cardioHecho:cardio,calento:started&&f.has('calento'),principalHecho:started&&f.has('principalHecho'),complementoHecho:started&&f.has('complementoHecho'),accesorioHecho:started&&f.has('accesorioHecho')});
+ }
  if(e.target.id!=='weight-form')return;
  e.preventDefault();
  const raw=$('#weight-kg').value.trim(),date=$('#weight-date').value,kg=Number(raw.replace(',','.'));
