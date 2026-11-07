@@ -30,3 +30,11 @@ ul{padding-left:18px;margin:6px 0}li{margin:3px 0}
 .tabs button.on{background:none;color:var(--sand-hi);font-weight:600}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 audio{width:100%;margin-top:8px}
+
+.weight-card .weight-current{font-size:1.5rem;color:var(--sand-hi);margin:0}
+.weight-card .weight-current strong{font-size:2.2rem}
+.weight-card .grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.weight-card label,.weight-card input{min-width:0}
+.weight-card form button{width:100%;margin-top:12px}
+.weight-records{list-style:none;padding:0}
+.weight-records li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--mocha)}

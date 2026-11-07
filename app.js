@@ -12,6 +12,34 @@ const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{retur
 const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const dayKey=d=>'hoy:dia:'+d, menuKey=d=>'hoy:menu:'+d;
 
+// ---------- Peso: registros locales, sin estimaciones ----------
+const WEIGHT_KEY='hoy:peso';
+const kgFmt=n=>n.toFixed(1).replace('.',',');
+const validWeightDate=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s+'T12:00:00Z'))&&new Date(s+'T12:00:00Z').toISOString().slice(0,10)===s;
+function weightRecords(){
+ const stored=load(WEIGHT_KEY,[]);
+ const records=Array.isArray(stored)?stored.filter(r=>r&&validWeightDate(r.date)&&Number.isFinite(r.kg)&&r.kg>0):[];
+ if(!records.length){records.push({date:'2026-11-07',kg:88.9});save(WEIGHT_KEY,records)}
+ return records.sort((a,b)=>b.date.localeCompare(a.date));
+}
+function weightGap(kg){
+ if(kg>81)return `Te faltan ${kgFmt(kg-81)} kg para entrar al rango`;
+ if(kg<79)return `Estás ${kgFmt(79-kg)} kg por debajo del rango`;
+ return 'Estás en el rango meta';
+}
+const weightDate=s=>s.split('-').reverse().join('/');
+function weightCard(){
+ const records=weightRecords(),latest=records[0];
+ return `<section class="card weight-card" aria-labelledby="weight-title"><h2 id="weight-title">Peso</h2>
+ <p class="muted">Peso actual · ${weightDate(latest.date)}</p><p class="weight-current"><strong>${kgFmt(latest.kg)}</strong> kg</p>
+ <p>Meta: <strong>79–81 kg</strong></p><p>${weightGap(latest.kg)}</p>
+ <form id="weight-form"><div class="grid2"><label>Peso (kg)<input id="weight-kg" name="kg" type="text" inputmode="decimal" placeholder="88,9" pattern="[0-9]+([.,][0-9]+)?" required></label>
+ <label>Fecha<input id="weight-date" name="date" type="date" value="${today()}" required></label></div>
+ <button class="prim" type="submit">Anotar</button><p class="muted">Si anotas la misma fecha, reemplaza el registro.</p></form>
+ <h3>Registros recientes</h3><ul class="weight-records">${records.slice(0,10).map(r=>`<li><time datetime="${r.date}">${weightDate(r.date)}</time><strong>${kgFmt(r.kg)} kg</strong></li>`).join('')}</ul>
+ <p class="muted">Datos guardados solo en este navegador.</p></section>`;
+}
+
 // ---------- Entrenamiento: semana 1 de retorno ----------
 const ENTRADA='Entrada: 4–5 min de bicicleta fácil.';
 const W={
@@ -97,7 +125,7 @@ const opts=(list,cur,attr)=>list.map(x=>`<button class="${x===cur?'on':''}" data
 
 function vHoy(){
  const s=dia(),dd=tplDay(D);
- let h=`<section class="card"><h2>Ánimo</h2><div class="row">${opts(['Bien','Normal','Cansado','Bajo'],s.animo,'animo')}</div></section>
+ let h=`${weightCard()}<section class="card"><h2>Ánimo</h2><div class="row">${opts(['Bien','Normal','Cansado','Bajo'],s.animo,'animo')}</div></section>
  <section class="card"><h2>Recuperación (Whoop, manual)</h2><div class="row">
  ${[['Verde','g'],['Amarillo','y'],['Rojo','r']].map(([n,c])=>`<button class="${c} ${s.rec===n?'on':''}" data-rec="${n}">${n}</button>`).join('')}</div>
  ${s.rec==='Rojo'?'<p class="muted">Recuperación en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
@@ -183,6 +211,16 @@ document.addEventListener('click',async e=>{
   mr.onstop=async()=>{st.getTracks().forEach(t=>t.stop());await putAudio(D,new Blob(ch,{type:mr.mimeType||'audio/mp4'}));$('#recst').textContent='';showAudio()};
   mr.start();b.disabled=true;$('#stop').disabled=false;$('#recst').textContent='Grabando…'}catch(err){$('#recst').textContent='No se pudo usar el micrófono: '+err.message}}
  if(b.id==='stop'&&mr){mr.stop();b.disabled=true;$('#rec').disabled=false}
+});
+document.addEventListener('submit',e=>{
+ if(e.target.id!=='weight-form')return;
+ e.preventDefault();
+ const raw=$('#weight-kg').value.trim(),date=$('#weight-date').value,kg=Number(raw.replace(',','.'));
+ if(!/^[0-9]+([.,][0-9]+)?$/.test(raw)||!Number.isFinite(kg)||kg<=0||!validWeightDate(date))return alert('Escribe un peso válido mayor que cero y una fecha válida.');
+ const records=weightRecords().filter(r=>r.date!==date);
+ records.push({date,kg});
+ try{save(WEIGHT_KEY,records)}catch{return alert('No se pudo guardar el peso en este navegador.');}
+ render();
 });
 document.addEventListener('change',e=>{const k=e.target.dataset.meta;if(k){const g=load('hoy:metas',{});const v=parseFloat(e.target.value);if(v>0)g[k]=v;else delete g[k];save('hoy:metas',g);render()}});
 document.addEventListener('input',e=>{if(e.target.id==='calcTxt')save(dayKey(D),{...dia(),calcTxt:e.target.value})});
