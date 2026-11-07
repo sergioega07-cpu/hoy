@@ -133,7 +133,8 @@ function vHoy(){
  if(s.entrena==='Sí'){
   h+=`<h3>Rama</h3><div class="row">${opts(RAMAS,s.rama,'rama')}</div><h3>Tiempo</h3><div class="row">${opts(TIEMPOS,s.tiempo,'tiempo')}</div>`;
   if(s.rama&&s.tiempo)h+=`<h3>${esc(s.rama)} · Día ${dd} · ${esc(s.tiempo)}</h3>${dow(D)===0?'<p class="muted">Es domingo: se sugiere descanso, pero tú decides.</p>':''}${sesion(s.rama,dd,s.tiempo)}
-   <div class="row"><button class="${s.hecho?'on':''}" data-hecho>${s.hecho?'Sesión hecha ✓':'Marcar sesión hecha'}</button></div>`;
+   <div class="row"><button class="${s.hecho?'on':''}" data-hecho>${s.hecho?'Sesión hecha ✓':'Marcar sesión hecha'}</button></div>
+   ${s.hecho?`<h3>Registro para Charles</h3>${recUI('entreno:'+D,'Cuéntale cómo salió el entreno: qué hiciste, cómo te sentiste, si algo dolió o quedó corto.')}<p class="muted">Queda en este teléfono. Envíamelo en este chat y se lo paso a Charles.</p>`:''}`;
  }
  h+=`<p class="muted">Semana 1 de retorno</p></section>
  <section class="card"><h2>Macros de hoy</h2>${resumen(D)}
@@ -178,16 +179,32 @@ function vEstudiar(){
 function vEspiritual(){
  return `<section class="card"><h2>Lectura seguida</h2><p class="verse">«${VERSO.txt}»</p><p class="muted">${VERSO.ref} · ${VERSO.ver}</p>
  <p class="muted">Punto de partida provisorio: más adelante fijamos dónde vas en tu lectura.</p></section>
- <section class="card"><h2>Tu audio de hoy</h2><p class="muted">Qué sientes y cómo razonas este verso.</p>
- <div class="row"><button class="prim" id="rec">● Grabar</button><button id="stop" disabled>■ Detener</button></div><p id="recst" class="muted"></p><div id="aud"></div></section>`;
+ <section class="card"><h2>Tu audio de hoy</h2>
+ ${recUI(D,'Qué sientes y cómo razonas este verso.')}</section>`;
 }
-async function showAudio(){const b=await getAudio(D),el=$('#aud');if(el&&b){el.innerHTML=`<audio controls src="${URL.createObjectURL(b)}"></audio><p class="muted">Guardado para ${fmt(D)}.</p>`}}
+function recUI(key,hint){
+ return `<p class="muted">${hint}</p>
+ <div class="row"><button class="prim" data-rec-key="${esc(key)}">● Grabar</button><button data-stop-key="${esc(key)}" disabled>■ Detener</button></div>
+ <p class="muted" data-recst="${esc(key)}"></p><div data-aud="${esc(key)}"></div>`;
+}
+function audioName(key,type){
+ const ext=(type||'').includes('mp4')?'m4a':(type||'').includes('mpeg')?'mp3':'webm';
+ return (String(key).startsWith('entreno:')?'entreno-':'reflexion-')+D+'.'+ext;
+}
+async function showAudio(key){
+ const b=await getAudio(key),el=document.querySelector(`[data-aud="${CSS.escape(key)}"]`);
+ if(!el||!b)return;
+ const url=URL.createObjectURL(b),name=audioName(key,b.type);
+ el.innerHTML=`<audio controls src="${url}"></audio><p class="muted">Guardado para ${fmt(D)}.</p>
+  <div class="row"><a class="btn" download="${esc(name)}" href="${url}">Descargar</a>${navigator.share?`<button data-share-key="${esc(key)}">Compartir</button>`:''}</div>`;
+}
 let mr=null;
 function render(){
  $('#fecha').textContent=fmt(D);
  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
  $('#view').innerHTML={hoy:vHoy,comida:vComida,entrenar:vEntrenar,estudiar:vEstudiar,espiritual:vEspiritual}[tab]();
- if(tab==='espiritual')showAudio();
+ if(tab==='espiritual')showAudio(D);
+ if(tab==='hoy'&&dia().hecho)showAudio('entreno:'+D);
 }
 document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
@@ -207,10 +224,16 @@ document.addEventListener('click',async e=>{
  if('crear' in d){const v=id=>$(id).value.trim(),n=parseFloat;if(!v('#cn'))return alert('Ponle un nombre');
   // guardado como "por porción": g=100 para que macrosOf use los valores tal cual
   const c=custom();c.push({id:'u'+Date.now(),n:v('#cn'),u:v('#cu')||'1 porción',g:100,p:n(v('#cp'))||0,c:n(v('#cc'))||0,f:n(v('#cf'))||0,k:n(v('#ck'))||0,propio:1});save('hoy:alimentos',c);return render()}
- if(b.id==='rec'){try{const st=await navigator.mediaDevices.getUserMedia({audio:true});const ch=[];mr=new MediaRecorder(st);mr.ondataavailable=ev=>ch.push(ev.data);
-  mr.onstop=async()=>{st.getTracks().forEach(t=>t.stop());await putAudio(D,new Blob(ch,{type:mr.mimeType||'audio/mp4'}));$('#recst').textContent='';showAudio()};
-  mr.start();b.disabled=true;$('#stop').disabled=false;$('#recst').textContent='Grabando…'}catch(err){$('#recst').textContent='No se pudo usar el micrófono: '+err.message}}
- if(b.id==='stop'&&mr){mr.stop();b.disabled=true;$('#rec').disabled=false}
+ if(d.recKey){const key=d.recKey,stEl=document.querySelector(`[data-recst="${CSS.escape(key)}"]`);
+  try{const st=await navigator.mediaDevices.getUserMedia({audio:true});const ch=[];mr=new MediaRecorder(st);mr.ondataavailable=ev=>ch.push(ev.data);
+   mr.onstop=async()=>{st.getTracks().forEach(t=>t.stop());await putAudio(key,new Blob(ch,{type:mr.mimeType||'audio/mp4'}));if(stEl)stEl.textContent='';showAudio(key)};
+   mr.start();b.disabled=true;const stopBtn=document.querySelector(`[data-stop-key="${CSS.escape(key)}"]`);if(stopBtn)stopBtn.disabled=false;if(stEl)stEl.textContent='Grabando…'}
+  catch(err){if(stEl)stEl.textContent='No se pudo usar el micrófono: '+err.message}}
+ if(d.stopKey&&mr){mr.stop();b.disabled=true;const recBtn=document.querySelector(`[data-rec-key="${CSS.escape(d.stopKey)}"]`);if(recBtn)recBtn.disabled=false}
+ if(d.shareKey){const blob=await getAudio(d.shareKey);if(!blob)return;
+  const file=new File([blob],audioName(d.shareKey,blob.type),{type:blob.type||'audio/webm'});
+  try{if(navigator.canShare&&!navigator.canShare({files:[file]}))throw new Error('Este dispositivo no puede compartir el archivo');
+   await navigator.share({files:[file],title:file.name})}catch(err){if(err.name!=='AbortError')alert('No se pudo compartir: '+err.message)}}
 });
 document.addEventListener('submit',e=>{
  if(e.target.id!=='weight-form')return;
