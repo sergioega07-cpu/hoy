@@ -42,14 +42,83 @@ function weightCard(){
 }
 
 // ---------- Entrenamiento: elección libre; sin listados inventados ----------
-const TIPOS=['Hipertrofia','CrossFit','Trote / 2400 m','Híbrido'];
+const TIPOS=['Hipertrofia','CrossFit','Trote','Híbrido'];
 const MUSCULOS=['Pecho','Espalda','Piernas','Hombros','Brazos','Core'];
+const DISTANCIAS=['2.400 m','5.000 m','10.000 m','21.000 m','42.000 m'];
 const CARDIO_LIGERO=['Bicicleta fácil','Remo suave','Marcha o trote conversacional','Escalera'];
 const FUENTES={hss:'https://www.hss.edu/health-library/move-better/static-dynamic-stretching',afmc:'https://www.afmc.af.mil/News/Article-Display/Article/2664126/improving-run-times-for-the-pt-test/',smith:'https://www.military.com/military-fitness/fitness-test-prep/improving-your-pft-run-time'};
 function trainingChoice(s){
- const legacy={Mixto:'Híbrido',Trote:'Trote / 2400 m',Acondicionamiento:'Híbrido',Calistenia:'CrossFit','CrossFit de retorno':'CrossFit'};
+ const raw=s.rama;
+ const legacy={Mixto:'Híbrido','Trote / 2400 m':'Trote',Acondicionamiento:'Híbrido',Calistenia:'CrossFit','CrossFit de retorno':'CrossFit'};
  const rama=TIPOS.includes(s.rama)||s.rama==='Recovery day'?s.rama:(legacy[s.rama]||'');
- return {...s,rama,musculo:s.musculo||'',minutosTotal:s.minutosTotal??'',minutosHechos:s.minutosHechos??0,cardioHecho:s.cardioHecho??0};
+ const distancia=s.distancia||(rama==='Trote'&&raw==='Trote / 2400 m'?'2.400 m':'');
+ return {...s,rama,musculo:s.musculo||'',distancia,pista400:s.pista400||'',vueltas400:s.vueltas400??'',tiempo400:s.tiempo400||'',minutosTotal:s.minutosTotal??'',minutosHechos:s.minutosHechos??0,cardioHecho:s.cardioHecho??0};
+}
+function parseTiempo400(raw){
+ const t=String(raw||'').trim().replace(',',':');
+ if(!t)return 0;
+ const m=t.match(/^(\d+)\s*[:m]\s*(\d{1,2})$/i);
+ if(m){const sec=(+m[1])*60+(+m[2]);return sec>0?sec:0}
+ if(/^\d+$/.test(t)){const n=+t;return n>0?n:0}
+ return 0;
+}
+function fmtTiempo400(sec){
+ const m=Math.floor(sec/60),r=sec%60;
+ return m+':'+String(r).padStart(2,'0');
+}
+function readTroteFields(f){
+ return {distancia:f.get('distancia')||'',pista400:f.get('pista400')||'',vueltas400:f.get('vueltas400')||'',tiempo400:(f.get('tiempo400')||'').trim()};
+}
+function validTrote(f){
+ const {distancia,pista400,vueltas400,tiempo400}=readTroteFields(f);
+ if(!DISTANCIAS.includes(distancia))return 'Elige qué prueba de trote vas a entrenar.';
+ if(pista400!=='Sí'&&pista400!=='No')return 'Indica si vas a correr en pista de 400 m.';
+ if(pista400==='Sí'){
+  const n=Number(vueltas400);
+  if(!Number.isSafeInteger(n)||n<1)return 'Escribe cuántos 400 m quieres hacer.';
+  if(!parseTiempo400(tiempo400))return 'Escribe el tiempo objetivo de cada 400 m, por ejemplo 1:30.';
+ }
+ return '';
+}
+function sesionTitulo(ses){
+ if(ses.rama==='Recovery day')return ses.cardioRecovery||ses.rama;
+ let t=ses.rama;
+ if(ses.musculo)t+=' · '+ses.musculo;
+ if(ses.distancia)t+=' · '+ses.distancia;
+ if(ses.pista400==='Sí'&&ses.vueltas400&&ses.tiempo400)t+=` · ${ses.vueltas400} × 400 m en ${ses.tiempo400}`;
+ return t;
+}
+function distanciaField(x,edit){
+ const show=!!(x&&x.rama==='Trote');
+ return `<label id="${edit?'distancia-field-edit':'distancia-field'}"${show?'':' hidden'}><span class="kicker">¿Qué prueba vas a entrenar?</span><select name="distancia"${show?' required':''}><option value="">Elige la distancia…</option>${DISTANCIAS.map(t=>`<option${x&&t===x.distancia?' selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
+}
+function pistaFields(x,edit){
+ const show=!!(x&&x.rama==='Trote'),pista=!!(x&&x.pista400==='Sí');
+ return `<label id="${edit?'pista-field-edit':'pista-field'}"${show?'':' hidden'}><span class="kicker">¿Vas a correr en pista de 400 m?</span><select name="pista400"${show?' required':''}><option value="">Elige…</option><option${x&&x.pista400==='Sí'?' selected':''}>Sí</option><option${x&&x.pista400==='No'?' selected':''}>No</option></select></label>
+<div id="${edit?'pista-detalle-edit':'pista-detalle'}"${pista?'':' hidden'}><label><span class="kicker">¿Cuántos 400 m quieres hacer?</span><input name="vueltas400" type="number" inputmode="numeric" min="1" step="1" placeholder="Ej. 5" value="${x&&x.vueltas400!==''&&x.vueltas400!=null?esc(x.vueltas400):''}"${pista?' required':''}></label>
+<label><span class="kicker">¿En cuánto tiempo cada 400 m?</span><input name="tiempo400" inputmode="text" placeholder="Ej. 1:30" value="${x&&x.tiempo400?esc(x.tiempo400):''}"${pista?' required':''}></label></div>`;
+}
+function toggleTrainingExtras(form){
+ if(!form)return;
+ const rama=(form.querySelector('[name=rama]')||{}).value||'';
+ const hip=rama==='Hipertrofia',trote=rama==='Trote';
+ const suf=form.id==='sesion-edit-form'?'-edit':'';
+ const mus=form.querySelector('#musculo-field'+suf);
+ const dist=form.querySelector('#distancia-field'+suf);
+ const pistaWrap=form.querySelector('#pista-field'+suf);
+ const det=form.querySelector('#pista-detalle'+suf);
+ const pistaVal=(form.querySelector('[name=pista400]')||{}).value;
+ const arm=(el,on)=>{
+  if(!el)return;
+  el.hidden=!on;
+  el.querySelectorAll('select,input').forEach(i=>{i.required=!!on;if(!on)i.value='';});
+ };
+ arm(mus,hip);arm(dist,trote);arm(pistaWrap,trote);
+ const showDet=trote&&pistaVal==='Sí';
+ if(det){
+  det.hidden=!showDet;
+  det.querySelectorAll('input').forEach(i=>{i.required=showDet;if(!showDet)i.value='';});
+ }
 }
 function weekMusculos(end){
  const seen=[];
@@ -60,16 +129,126 @@ function weekMusculos(end){
  }
  return seen;
 }
-function trainingBase(tipo,musculo){
- const piernas=tipo==='Hipertrofia'&&musculo==='Piernas';
- const base={name:tipo==='Hipertrofia'?(musculo||'Hipertrofia'):tipo,source:tipo==='Hipertrofia'?(musculo?'Hipertrofia · '+musculo:'Hipertrofia'):tipo,dynamic:'Balanceos de piernas y estocadas caminando, controlados; movilidad suave de tobillos y cadera.',warm:piernas||tipo==='CrossFit'?'Bicicleta fácil':tipo==='Hipertrofia'?'Remo suave':'Marcha o trote fácil',specific:tipo==='Trote / 2400 m'?'Marcha técnica suave, sin sprints ni prueba máxima.':'Movimientos suaves del grupo que vas a trabajar, sin fatiga y sin cargar.',static:piernas||tipo==='Trote / 2400 m'?'Cuádriceps e isquios, sin dolor.':'La zona que trabajaste, suave y sin dolor.',blocks:[]};
+function bloque(name,source,purpose,items,min,max){return {name,source,purpose,items,min,max}}
+function hipertrofiaBlocks(musculo){
+ const src='Tu hipertrofia · '+musculo,carga='3–4 series; carga de hoy, 3–4 repeticiones en reserva';
+ const s=(name,purpose,items,min,max)=>bloque(name,src,purpose,items,min,max);
+ if(musculo==='Piernas')return [
+  s('Sentadilla','Patrón principal',[carga],6,8),
+  s('Estocadas','Control unilateral',['3 series por lado'],5,6),
+  s('Extensión de cuádriceps','Aislamiento',['3 series'],4,5),
+  s('Peso muerto con barra y mancuernas','Bisagra',['3 series; barra o mancuernas'],6,8),
+  s('Hack','Sentadilla en máquina',['3 series'],5,6),
+  s('Gemelos','Pantorrilla',['3 series'],4,5),
+  s('Abdomen','Cierre',['2–3 series'],3,4)
+ ];
+ if(musculo==='Pecho')return [
+  s('Press en banca con barra','Empuje horizontal',[carga],6,8),
+  s('Press inclinado con mancuernas','Empuje inclinado',['3–4 series'],6,8),
+  s('Fondos en paralelas','Empuje',['3 series; rango cómodo'],5,6),
+  s('Press declinado','Empuje declinado',['3 series'],5,6)
+ ];
+ if(musculo==='Espalda')return [
+  s('Remo inclinado con barra','Tracción horizontal',[carga],6,8),
+  s('Remo con mancuerna','Tracción unilateral',['3 series por lado'],5,6),
+  s('Dominadas','Tracción vertical',['3 series; asistidas si hace falta'],5,6),
+  s('Remo en polea','Tracción complementaria',['3 series'],4,5)
+ ];
+ if(musculo==='Hombros')return [
+  s('Press militar','Empuje vertical',[carga],6,8),
+  s('Vuelos laterales','Deltoides lateral',['3–4 series'],5,6),
+  s('Press Arnold','Empuje de hombros',['3 series'],5,6),
+  s('Vuelos posteriores','Hombro posterior',['3 series'],4,5)
+ ];
+ if(musculo==='Brazos')return [
+  s('Curl de bíceps con mancuernas','Bíceps',[carga],5,6),
+  s('Curl en banco Scott','Bíceps',['3 series'],4,5),
+  s('Extensión de tríceps en polea','Tríceps',['3–4 series'],5,6),
+  s('Press francés','Tríceps',['3 series'],4,5),
+  s('Fondos entre bancos','Tríceps',['3 series'],4,5)
+ ];
+ if(musculo==='Core')return [
+  s('Plancha','Control del tronco',['3 series de 20–40 s'],4,5),
+  s('Abdomen','Cierre',['3 series'],4,5),
+  s('Extensión lumbar','Cadena posterior',['3 series'],4,5)
+ ];
+ return [];
+}
+function troteBlocks(s){
+ const dist=DISTANCIAS.includes(s.distancia)?s.distancia:'';
+ const n=Number(s.vueltas400),pace=parseTiempo400(s.tiempo400);
+ if(s.pista400==='Sí'&&Number.isSafeInteger(n)&&n>0&&pace>0){
+  const t=fmtTiempo400(pace),rec=fmtTiempo400(Math.max(90,pace));
+  return [
+   bloque('Progresivos','Pista de 400 m','Entrada específica, sin sprint',['2–4 rectas suaves, cada una un poco más rápida, sin llegar al máximo'],3,5),
+   bloque(n+' × 400 m','Pista · objetivo '+t,`Objetivo: ${n} × 400 m en ${t} cada uno`,[
+    `Hoy construye hacia ${n} × 400 m en ${t}. No es una prueba de hoy.`,
+    `Corre cada 400 buscando acercarte a ${t}, con técnica limpia.`,
+    `Recuperación: caminata o trote muy suave unos ${rec} entre series (al menos el mismo tiempo que el 400).`,
+    'Si un 400 se va más lento o se corta el aire, alarga la recuperación; no persigas el reloj a costa de la forma.',
+    dist?`Esta sesión apoya tu prueba de ${dist}.`:'',
+    'Cuando esos 400 salgan cerca del objetivo con recuperación cómoda, se puede recortar el descanso o sumar una serie.'
+   ].filter(Boolean),12,22),
+   bloque('Control de tronco','Trote · apoyo','Plancha o barquito',['2–3 × 15–20 s, sin aguantar la respiración'],3,4)
+  ];
+ }
+ const src=dist?'Trote · '+dist:'Trote';
+ if(dist==='2.400 m')return [
+  bloque('Trote o intervalos controlados',src,'Base hacia los 2.400 m, sin prueba máxima',['Trote conversacional o intervalos cortos controlables, con recuperación caminando.','No corras al ritmo de una marca si todavía no tienes una de hoy.','Si corta el aire, camina y retoma.'],10,16),
+  bloque('Control de tronco',src,'Plancha o barquito',['2–3 × 15–20 s, sin aguantar la respiración'],3,4)
+ ];
+ if(dist==='5.000 m')return [
+  bloque('Trote conversacional',src,'Base fácil para 5.000 m',['Trote continuo o marcha-trote, ritmo al que puedes hablar.','Sin series de velocidad ni tempo: primero se construye base.','Camina si lo necesitas y retoma.'],12,18),
+  bloque('Control de tronco',src,'Apoyo',['2–3 × 15–20 s de plancha o barquito'],3,4)
+ ];
+ if(dist==='10.000 m')return [
+  bloque('Trote sostenido',src,'Base para 10.000 m',['Trote conversacional, un poco más largo y estable, sin apurar el ritmo.','Si se corta, camina un tramo y retoma; el objetivo es terminar cómodo.'],12,18),
+  bloque('Control de tronco',src,'Apoyo',['2–3 × 15–20 s de plancha o barquito'],3,4)
+ ];
+ if(dist==='21.000 m'||dist==='42.000 m')return [
+  bloque('Fondo fácil',src,'Base aeróbica para '+dist,['Trote o marcha-trote muy conversacional. Caminar está bien.','Esfuerzo bajo: el fondo se construye con consistencia, no apurando el ritmo de hoy.'],12,20),
+  bloque('Control de tronco',src,'Apoyo',['2–3 × 15–20 s de plancha o barquito'],3,4)
+ ];
+ return [
+  bloque('Trote conversacional','Trote','Movimiento fácil',['Trote o marcha a ritmo conversacional; camina si hace falta'],10,16),
+  bloque('Control de tronco','Trote · apoyo','Plancha o barquito',['2–3 × 15–20 s'],3,4)
+ ];
+}
+function trainingBase(tipo,musculo,ses){
+ ses=ses||{};
+ const piernas=tipo==='Hipertrofia'&&musculo==='Piernas',run=tipo==='Trote';
+ const base={name:tipo==='Hipertrofia'?(musculo||'Hipertrofia'):tipo,source:tipo,dynamic:'Balanceos de piernas y estocadas caminando, controlados; movilidad suave de tobillos y cadera.',warm:piernas||tipo==='CrossFit'?'Bicicleta fácil':tipo==='Hipertrofia'?'Remo suave':'Marcha o trote fácil',specific:run?(ses.pista400==='Sí'?'Progresivos suaves en recta, sin sprint.':'Marcha técnica suave, sin sprints ni prueba máxima.'):'Movimientos suaves del grupo que vas a trabajar, sin fatiga y sin cargar.',static:piernas||run?'Cuádriceps e isquios, sin dolor.':'La zona que trabajaste, suave y sin dolor.',blocks:[]};
  if(tipo==='Hipertrofia'&&!piernas)base.dynamic='Movilidad dinámica de hombros y codos, giros suaves de torso; sin sostener al límite.';
+ if(tipo==='Hipertrofia'){
+  base.source=musculo?'Tu hipertrofia · '+musculo:'Hipertrofia';
+  base.blocks=hipertrofiaBlocks(musculo);
+ }else if(tipo==='CrossFit'){
+  base.source='Tu CrossFit · fuerza, gimnasia y motor';
+  base.dynamic+=' Movilidad suave de hombros y muñecas para barra y anillas.';
+  base.specific='Complejo de barra vacía: bisagra, jalón y envío, sin fatiga y sin máximos.';
+  base.blocks=[
+   bloque('Front squat','Tu CrossFit · fuerza','Sentadilla frontal antes de la fatiga',['3–4 series de 5; carga de hoy, sin porcentajes de marcas antiguas'],6,8),
+   bloque('Gimnasia · tracción','Tu CrossFit · skill','Ring rows o dominadas, por calidad',['3 series de 5–8; anillas más altas si hace falta'],5,6),
+   bloque('Motor corto','Tu CrossFit · WOD','Pieza corta, sin competir',['8–12 min a ritmo sostenible: sentadilla o bisagra liviana + remo o bicicleta'],8,12)
+  ];
+ }else if(tipo==='Híbrido'){
+  base.source='Híbrido · fuerza y apoyo al trote';
+  base.blocks=[
+   bloque('Sentadilla goblet','Híbrido · fuerza','Fuerza útil para correr',['3 series de 6–8, baja con control'],6,8),
+   bloque('Ring rows o remo','Híbrido · tracción','Tracción sin agotar las piernas',['3 series de 6–8'],5,6),
+   bloque('Peso muerto rumano','Híbrido · bisagra','Cadena posterior',['3 series de 6–8 livianas'],5,6)
+  ];
+ }else if(tipo==='Trote'){
+  base.name=ses.distancia?('Trote · '+ses.distancia):'Trote';
+  base.source=ses.pista400==='Sí'?'Trote · pista de 400 m':(ses.distancia?'Trote · '+ses.distancia:'Trote');
+  base.blocks=troteBlocks(ses);
+ }
  return base;
 }
 // Presupuesto en minutos: incluye descansos/transiciones; nunca se exige llenar el tiempo sobrante.
 function trainingPlan(s,date){
  const total=Number(s.minutosTotal),already=Number(s.minutosHechos),remaining=Math.max(0,total-already);
- const cardioDone=Number(s.cardioHecho)||0,cardioTarget=Math.max(0,20-cardioDone);
+ const cardioDone=Number(s.cardioHecho)||0,cardioTarget=Math.max(0,(s.rama==='Trote'?5:20)-cardioDone);
  const warmDone=already>0&&s.calento===true;
  if(s.rama==='Recovery day'){
   const mode=CARDIO_LIGERO.includes(s.cardioRecovery)?s.cardioRecovery:'Marcha o trote conversacional';
@@ -83,7 +262,7 @@ function trainingPlan(s,date){
   plan.cardio=plan.last;
   return plan;
  }
- const base=trainingBase(s.rama,s.musculo),run=s.rama==='Trote / 2400 m';
+ const base=trainingBase(s.rama,s.musculo,s),run=s.rama==='Trote';
  const plan={...base,preparation:base,total,already,remaining,cardioDone,cardioTarget,warmDone,run,blocks:[],warm:0,dynamic:0,specific:0,exit:0,cardio:0,middle:0,last:0,margin:0};
  if(!remaining)return plan;
  if(remaining<14&&!warmDone){
@@ -103,8 +282,26 @@ function trainingPlan(s,date){
  const additional=Math.max(0,remaining-overhead-mainReserve-skillReserve);
  plan.cardio=firstCardio+Math.min(Math.max(0,cardioTarget-firstCardio),additional);
  let work=Math.max(0,remaining-overhead-(plan.cardio-firstCardio));
- for(const [i,b] of candidates.entries()){if(work<b.min)break;const reserve=candidates.slice(i+1).reduce((n,x)=>n+x.min,0);const minutes=Math.min(b.max,work-reserve>=b.min?work-reserve:b.min);plan.blocks.push({...b,minutes});work-=minutes}
- plan.omitted=candidates.filter(b=>!plan.blocks.some(x=>x.name===b.name)).map(b=>b.name);
+ if(candidates.length){
+  let left=Math.max(0,work);
+  const sumMin=candidates.reduce((n,b)=>n+b.min,0);
+  const minutes=candidates.map(b=>{
+   if(work>=sumMin){const give=Math.min(b.min,left);left-=give;return give}
+   return 0;
+  });
+  if(work<sumMin){
+   minutes.forEach((_,i)=>{
+    const n=candidates.length-i,fair=Math.max(1,Math.floor((left||1)/n));
+    const use=Math.min(candidates[i].max,fair,left||1);
+    minutes[i]=left?use:1;left=Math.max(0,left-minutes[i]);
+   });
+  }else{
+   candidates.forEach((b,i)=>{if(!left)return;const add=Math.min(b.max-minutes[i],left);if(add>0){minutes[i]+=add;left-=add}});
+  }
+  candidates.forEach((b,i)=>plan.blocks.push({...b,minutes:Math.max(1,minutes[i])}));
+  plan.omitted=[];
+  work=left;
+ }
  plan.middle=Math.floor((plan.cardio-firstCardio)/2);plan.last=plan.cardio-firstCardio-plan.middle;
  plan.margin=work;return plan;
 }
@@ -112,13 +309,13 @@ function getSesiones(){
  const s=dia();
  let list;
  if(Array.isArray(s.sesiones))list=s.sesiones;
- else if(s.rama&&s.minutosTotal!==''&&s.minutosTotal!=null)list=[{rama:s.rama,musculo:s.musculo,cardioRecovery:s.cardioRecovery,minutosTotal:s.minutosTotal,minutosHechos:s.minutosHechos,cardioHecho:s.cardioHecho,hecho:s.hecho,id:s.id||'legacy'}];
+ else if(s.rama&&s.minutosTotal!==''&&s.minutosTotal!=null)list=[{rama:s.rama,musculo:s.musculo,distancia:s.distancia,pista400:s.pista400,vueltas400:s.vueltas400,tiempo400:s.tiempo400,cardioRecovery:s.cardioRecovery,minutosTotal:s.minutosTotal,minutosHechos:s.minutosHechos,cardioHecho:s.cardioHecho,hecho:s.hecho,id:s.id||'legacy'}];
  else list=[];
- return list.map((x,i)=>trainingChoice({rama:x.rama,musculo:x.musculo,cardioRecovery:x.cardioRecovery,minutosTotal:x.minutosTotal,minutosHechos:x.minutosHechos,cardioHecho:x.cardioHecho,hecho:x.hecho,id:x.id||('s-'+i)}));
+ return list.map((x,i)=>trainingChoice({rama:x.rama,musculo:x.musculo,distancia:x.distancia,pista400:x.pista400,vueltas400:x.vueltas400,tiempo400:x.tiempo400,cardioRecovery:x.cardioRecovery,minutosTotal:x.minutosTotal,minutosHechos:x.minutosHechos,cardioHecho:x.cardioHecho,hecho:x.hecho,id:x.id||('s-'+i)}));
 }
 function saveSesiones(sesiones,extra){
  if(editSesionId&&!sesiones.some(x=>x.id===editSesionId))editSesionId=null;
- return setDia({sesiones,hecho:sesiones.some(x=>x.hecho),rama:'',minutosTotal:'',minutosHechos:0,cardioHecho:0,musculo:'',cardioRecovery:'',id:'',...(extra||{})});
+ return setDia({sesiones,hecho:sesiones.some(x=>x.hecho),rama:'',minutosTotal:'',minutosHechos:0,cardioHecho:0,musculo:'',distancia:'',pista400:'',vueltas400:'',tiempo400:'',cardioRecovery:'',id:'',...(extra||{})});
 }
 function sesionEditForm(x){
  if(x.rama==='Recovery day'){
@@ -128,13 +325,14 @@ function sesionEditForm(x){
  }
  return `<form id="sesion-edit-form" data-edit-id="${esc(x.id)}" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required>${TIPOS.map(t=>`<option${t===x.rama?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
  <label id="musculo-field-edit"${x.rama==='Hipertrofia'?'':' hidden'}><span class="kicker">¿Qué músculo vas a entrenar?</span><select name="musculo"${x.rama==='Hipertrofia'?' required':''}><option value="">Elige el músculo…</option>${MUSCULOS.map(t=>`<option${t===x.musculo?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
+ ${distanciaField(x,true)}${pistaFields(x,true)}
  <label><span class="kicker">Minutos</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required value="${esc(x.minutosTotal)}"></label>
  <div class="row"><button type="submit" class="prim">Guardar</button><button type="button" data-edit-cancel>Cancelar</button></div></form>`;
 }
 function trainingLog(sesiones){
  if(!sesiones.length)return '';
  return `<p class="kicker">Registro de hoy</p><ul class="training-log">${sesiones.map(x=>{
-  const label=`<strong>${esc(x.rama)}</strong>${x.musculo?' · '+esc(x.musculo):''}${x.cardioRecovery?' · '+esc(x.cardioRecovery):''} · ${esc(x.minutosTotal)} min${x.hecho?' · hecha':''}`;
+  const label=`<strong>${esc(sesionTitulo(x))}</strong> · ${esc(x.minutosTotal)} min${x.hecho?' · hecha':''}`;
   if(editSesionId===x.id)return `<li>${sesionEditForm(x)}</li>`;
   return `<li><span class="log-text">${label}</span><span class="log-actions"><button type="button" data-edit-ses="${esc(x.id)}">Editar</button><button type="button" data-del-ses="${esc(x.id)}">Borrar</button></span></li>`;
  }).join('')}</ul>`;
@@ -176,6 +374,7 @@ function trainingPanel(){
   h+=ya.length?`<p class="muted">Esta semana ya anotaste: ${esc(ya.join(', '))}.</p>`:'<p class="muted">Esta semana aún no anotaste un músculo.</p>';
   h+=`<form id="training-form" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required><option value="">Elige tu sesión…</option>${TIPOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
  <label id="musculo-field" hidden><span class="kicker">¿Qué músculo vas a entrenar?</span><select name="musculo"><option value="">Elige el músculo…</option>${MUSCULOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
+ ${distanciaField(null,false)}${pistaFields(null,false)}
  <label><span class="kicker">Minutos disponibles</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required placeholder="Ej. 40"></label>
  <button type="submit" class="prim">Armar sesión</button></form>`;
  }else if(s.entrena==='No'){
@@ -199,7 +398,7 @@ function trainingPanel(){
 }
 function sesion(p,ses){
  const tipo=ses.rama;
- const titulo=p.recovery?(p.name||tipo):(ses.musculo?tipo+' · '+ses.musculo:tipo);
+ const titulo=p.recovery?(p.name||tipo):sesionTitulo(ses);
  let h=`<article class="training-session"><p class="kicker">Tu sesión · ${p.remaining} min por hacer</p><h3>${esc(titulo)}</h3>`;
  if(!p.blocks.length&&!p.recovery)h+='<p class="muted">Los ejercicios se arman contigo. Todavía no hay un listado cargado para esta sesión.</p>';
  if(!p.remaining)return h+'<p>No queda tiempo pendiente. No se añade otro entreno. Puedes cerrar la sesión y grabar tu registro en Hoy.</p></article>';
@@ -210,7 +409,7 @@ function sesion(p,ses){
  if(p.omitted?.length)h+=`<p class="muted">Fuera por tiempo: ${p.omitted.join(', ')}. No se añaden al final.</p>`;
  const cardioMode=p.cardioMode||(tipo==='Hipertrofia'?(ses.musculo==='Piernas'?'bicicleta fácil':'remo suave'):tipo==='CrossFit'?'bicicleta fácil':'marcha / trote conversacional; camina si hace falta');
  const cardioSrc=p.recovery?'Recovery day · cardio ligero':tipo==='Hipertrofia'?'Cardio general':tipo==='CrossFit'?'Cardio general':'Cardio general';
- const cardioBlock=(n,label)=>n?`<section class="cardio"><h4>${label} · ${n} min</h4><p>${cardioMode}. ${p.recovery?'Ritmo conversacional, sin buscar fatiga.':''} ${!p.recovery&&(tipo==='Híbrido'||p.run)?'Apoyo al 2400 m: construir tolerancia, no correr al ritmo meta.':''}</p><p class="source">${cardioSrc}.</p></section>`:'';
+ const cardioBlock=(n,label)=>n?`<section class="cardio"><h4>${label} · ${n} min</h4><p>${cardioMode}. ${p.recovery?'Ritmo conversacional, sin buscar fatiga.':''} ${!p.recovery&&(tipo==='Híbrido'||p.run)?'Apoyo a tu prueba de trote: construir tolerancia, no correr al ritmo de competencia.':''}</p><p class="source">${cardioSrc}.</p></section>`:'';
  p.blocks.forEach((b,i)=>{h+=`<section class="session-block"><h4>${i+1}. ${b.name} · hasta ${b.minutes} min</h4><p class="source">Base: ${b.source} · ${b.purpose}.</p><ul>${b.items.map(x=>`<li>${x}</li>`).join('')}</ul><p class="muted">Descansa 60–120 s o más. El tiempo incluye descanso y transiciones; si no alcanza, quita una serie, no el descanso.</p></section>`});
  h+=cardioBlock((p.middle||0)+(p.last||0),'Cardio general del entrenamiento');
  h+=`<section class="session-block"><h4>Elongación estática · salida</h4><p>${p.exit?p.exit+' min reservados.':'Sin tiempo reservado: déjala para después, con el cuerpo caliente.'} ${p.preparation.static} Sostén suave 20–30 s por lado, sin rebotes; completa aparte si no cabe. No se hace en frío. Base: HSS.</p></section>
@@ -432,7 +631,9 @@ document.addEventListener('submit',e=>{
    const rama=f.get('rama'),musculo=f.get('musculo');
    if(!TIPOS.includes(rama)||!Number.isSafeInteger(total)||total<0)return alert('Elige un tipo y minutos enteros desde cero.');
    if(rama==='Hipertrofia'&&!MUSCULOS.includes(musculo))return alert('Elige qué músculo vas a entrenar.');
-   sesiones[i]={...prev,rama,musculo:rama==='Hipertrofia'?musculo:'',cardioRecovery:'',minutosTotal:total};
+   if(rama==='Trote'){const err=validTrote(f);if(err)return alert(err);}
+   const extras=rama==='Trote'?readTroteFields(f):{distancia:'',pista400:'',vueltas400:'',tiempo400:''};
+   sesiones[i]={...prev,rama,musculo:rama==='Hipertrofia'?musculo:'',...extras,cardioRecovery:'',minutosTotal:total};
   }
   editSesionId=null;
   return saveSesiones(sesiones);
@@ -441,7 +642,9 @@ document.addEventListener('submit',e=>{
   e.preventDefault();const f=new FormData(e.target),total=Number(f.get('total')),rama=f.get('rama'),musculo=f.get('musculo');
   if(!TIPOS.includes(rama)||!Number.isSafeInteger(total)||total<0)return alert('Elige un tipo y minutos enteros desde cero.');
   if(rama==='Hipertrofia'&&!MUSCULOS.includes(musculo))return alert('Elige qué músculo vas a entrenar.');
-  const ses={id:'s'+Date.now(),rama,musculo:rama==='Hipertrofia'?musculo:'',minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
+  if(rama==='Trote'){const err=validTrote(f);if(err)return alert(err);}
+  const extras=rama==='Trote'?readTroteFields(f):{distancia:'',pista400:'',vueltas400:'',tiempo400:''};
+  const ses={id:'s'+Date.now(),rama,musculo:rama==='Hipertrofia'?musculo:'',...extras,minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
   return saveSesiones([...getSesiones(),ses],{entrena:''});
  }
  if(e.target.id==='recovery-form'){
@@ -460,10 +663,8 @@ document.addEventListener('submit',e=>{
  render();
 });
 document.addEventListener('change',e=>{
- if(e.target.name==='rama'&&e.target.form&&(e.target.form.id==='training-form'||e.target.form.id==='sesion-edit-form')){
-  const field=$(e.target.form.id==='sesion-edit-form'?'#musculo-field-edit':'#musculo-field'),sel=field&&field.querySelector('select'),show=e.target.value==='Hipertrofia';
-  if(field)field.hidden=!show;
-  if(sel){sel.required=show;if(!show)sel.value='';}
+ if((e.target.name==='rama'||e.target.name==='pista400')&&e.target.form&&(e.target.form.id==='training-form'||e.target.form.id==='sesion-edit-form')){
+  toggleTrainingExtras(e.target.form);
  }
  const k=e.target.dataset.meta;if(k){const g=load('hoy:metas',{});const v=parseFloat(e.target.value);if(v>0)g[k]=v;else delete g[k];save('hoy:metas',g);render()}
 });
