@@ -396,10 +396,35 @@ function trainingPanel(){
  });
  return h;
 }
+function sessionFill(s){
+ const base=trainingBase(s.rama,s.musculo,s);
+ const run=s.rama==='Trote';
+ const overhead=5+2+(run?1:2)+2;
+ const extraCardio=run?0:15;
+ const sumMin=base.blocks.reduce((n,b)=>n+b.min,0);
+ const sumMax=base.blocks.reduce((n,b)=>n+b.max,0);
+ return {fillMin:overhead+extraCardio+sumMin,fillMax:overhead+extraCardio+sumMax};
+}
+function sessionAviso(ses){
+ if(!['Hipertrofia','CrossFit','Híbrido'].includes(ses.rama))return '';
+ const total=Number(ses.minutosTotal),{fillMin,fillMax}=sessionFill(ses);
+ if(!Number.isFinite(total)||!fillMax)return '';
+ const nombre=sesionTitulo(ses);
+ const rango=`unos ${fillMin} a ${fillMax} minutos, con preparación y los 20 de cardio`;
+ if(total>fillMax+10){
+  const otros={'Hipertrofia':'Híbrido, CrossFit','CrossFit':'Hipertrofia, Híbrido','Híbrido':'Hipertrofia, CrossFit'}[ses.rama];
+  return `<p class="muted">Con ${total} minutos te sobra tiempo para ${esc(nombre)}. Ese trabajo cabe en ${rango}. Te recomiendo ${otros}, o añadir otra sesión para usar el resto; no lo dejo que lo adivines.</p>`;
+ }
+ if(total<fillMin){
+  return `<p class="muted">Con ${total} minutos el tiempo no da del todo para ${esc(nombre)} completo (${rango}). Puedes hacerlo igual acortando series, o sumar minutos.</p>`;
+ }
+ return '';
+}
 function sesion(p,ses){
  const tipo=ses.rama;
  const titulo=p.recovery?(p.name||tipo):sesionTitulo(ses);
- let h=`<article class="training-session"><p class="kicker">Tu sesión · ${p.remaining} min por hacer</p><h3>${esc(titulo)}</h3>`;
+ let h=`<article class="training-session"><p class="kicker">Tu sesión · ${p.remaining} min por hacer</p><h3>${esc(titulo)}</h3>`+sessionAviso(ses);
+
  if(!p.blocks.length&&!p.recovery)h+='<p class="muted">Los ejercicios se arman contigo. Todavía no hay un listado cargado para esta sesión.</p>';
  if(!p.remaining)return h+'<p>No queda tiempo pendiente. No se añade otro entreno. Puedes cerrar la sesión y grabar tu registro en Hoy.</p></article>';
  h+=`<section class="session-block"><h4>Elongación · dinámica</h4><p>${p.dynamic?p.dynamic+' min: '+p.preparation.dynamic:'Pendiente hasta elevar temperatura; no se fuerza en frío.'}</p></section>`;
@@ -500,20 +525,26 @@ function vHoy(){
  ${espiritualLectura(s,false)}`;
  return h;
 }
-function menuFoods(b){
- const list=allFoods().filter(f=>f.charles);
- if(!b||b==='Extras')return list;
- return list.filter(f=>Array.isArray(f.slots)&&f.slots.includes(b));
+const GRUPOS=[{id:'proteina',label:'Proteína'},{id:'carbohidratos',label:'Carbohidratos'},{id:'grasa',label:'Grasa'},{id:'vegetales',label:'Vegetales'}];
+const grupoLabel=id=>(GRUPOS.find(g=>g.id===id)||{}).label||'';
+function menuFoods(grupo){
+ return allFoods().filter(f=>{
+  if(f.grupo===grupo)return true;
+  if(f.propio&&!f.grupo)return true;
+  return false;
+ });
 }
 function pickerHTML(b){
- const list=menuFoods(b);
- if(!list.length)return `<p class="muted">Aquí van a aparecer las comidas de tu menú con Charles, no un catálogo general.</p>`;
- return `<div class="row"><select data-sel="${b}"><option value="">Elegir alimento…</option>${list.map(f=>`<option value="${f.id}">${esc(f.n)} — ${esc(f.u)}</option>`).join('')}</select>
- <input type="number" inputmode="decimal" min="0.25" step="0.25" value="1" data-qty="${b}" style="width:90px" aria-label="porciones"><button class="sm prim" data-add="${b}">Agregar</button></div>`;
+ return GRUPOS.map(g=>{
+  const list=menuFoods(g.id);
+  const opts=list.length?list.map(f=>`<option value="${f.id}">${esc(f.n)} — ${esc(f.u)}</option>`).join(''):'';
+  return `<label><span class="kicker">${g.label}</span><div class="row"><select data-sel="${b}" data-grupo="${g.id}"><option value="">Elegir ${g.label.toLowerCase()}…</option>${opts}</select>
+ <input type="number" inputmode="decimal" min="0.25" step="0.25" value="1" data-qty="${b}" data-grupo="${g.id}" style="width:90px" aria-label="porciones"><button class="sm prim" data-add="${b}" data-grupo="${g.id}">Agregar</button></div></label>`;
+ }).join('');
 }
 function listaHTML(d,b){
  const m=load(menuKey(d),{});return (m[b]||[]).map((it,i)=>{const f=allFoods().find(x=>x.id===it.id);if(!f)return '';const x=macrosOf(f,it.q);
-  const extra=[f.u,f.nota,x?`P ${x.p.toFixed(1)} · C ${x.c.toFixed(1)} · G ${x.f.toFixed(1)} · ${Math.round(x.k)} kcal`:''].filter(Boolean).join(' · ');
+  const extra=[grupoLabel(it.grupo||f.grupo),f.u,f.nota,x?`P ${x.p.toFixed(1)} · C ${x.c.toFixed(1)} · G ${x.f.toFixed(1)} · ${Math.round(x.k)} kcal`:''].filter(Boolean).join(' · ');
   return `<div class="item"><span>${it.q}× ${esc(f.n)}<br><span class="muted">${esc(extra)}</span></span><button class="sm" data-del="${b}:${i}">✕</button></div>`}).join('');
 }
 function menuTarget(){return load('hoy:menuFecha',null)||addDays(D,1)}
@@ -527,7 +558,7 @@ function vComida(){
  ${[['p','Proteína (g)'],['c','Carbos (g)'],['f','Grasas (g)'],['k','kcal (opcional)']].map(([k,l])=>`<label>${l}<input type="number" inputmode="decimal" data-meta="${k}" value="${g[k]??''}" placeholder="tu meta"></label>`).join('')}</div></section>
  <section class="card"><h2>Crear alimento propio</h2><p class="muted">Valores por porción, escritos por ti.</p>
  <input id="cn" placeholder="Nombre (ej. queque de la casa)"><div class="grid2" style="margin-top:8px"><input id="cu" placeholder="Porción (ej. 1 trozo)"><input id="ck" type="number" inputmode="decimal" placeholder="kcal"><input id="cp" type="number" inputmode="decimal" placeholder="Proteína g"><input id="cc" type="number" inputmode="decimal" placeholder="Carbos g"><input id="cf" type="number" inputmode="decimal" placeholder="Grasas g"><button class="prim" data-crear>Guardar</button></div></section>
- <p class="muted">Opciones de tu menú con Charles. Los macros de cada plato se suman cuando él los tenga; no se inventan.</p>`;
+ <p class="muted">En cada comida eliges proteína, carbohidratos, grasa y vegetales. Son alimentos que has comido con Charles, no un catálogo general ni un plato cerrado. Los macros se suman cuando él los tenga; no se inventan.</p>`;
  return h;
 }
 function vEntrenar(){
@@ -594,8 +625,9 @@ document.addEventListener('click',async e=>{
  }
  if(d.calc)return setDia({calc:d.calc,calcTxt:$('#calcTxt').value});
  if(d.mf!==undefined){const n=+d.mf;save('hoy:menuFecha',n===0?null:addDays(menuTarget(),n));return render()}
- if(d.add){const blk=d.add,id=document.querySelector(`[data-sel="${blk}"]`).value,q=parseFloat(document.querySelector(`[data-qty="${blk}"]`).value)||1;if(!id)return;
-  const T=blk==='Extras'?D:menuTarget(),m=load(menuKey(T),{});(m[blk]=m[blk]||[]).push({id,q});save(menuKey(T),m);return render()}
+ if(d.add){const blk=d.add,grupo=d.grupo||'',sel=document.querySelector(`select[data-sel="${blk}"]${grupo?`[data-grupo="${grupo}"]`:''}`),qty=document.querySelector(`input[data-qty="${blk}"]${grupo?`[data-grupo="${grupo}"]`:''}`);
+  const id=sel&&sel.value,q=parseFloat(qty&&qty.value)||1;if(!id)return;
+  const T=blk==='Extras'?D:menuTarget(),m=load(menuKey(T),{});(m[blk]=m[blk]||[]).push({id,q,grupo});save(menuKey(T),m);return render()}
  if(d.del){const[blk,i]=d.del.split(':'),T=blk==='Extras'?D:menuTarget(),m=load(menuKey(T),{});m[blk].splice(+i,1);save(menuKey(T),m);return render()}
  if('crear' in d){const v=id=>$(id).value.trim(),n=parseFloat;if(!v('#cn'))return alert('Ponle un nombre');
   // guardado como "por porción": g=100 para que macrosOf use los valores tal cual

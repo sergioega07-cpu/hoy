@@ -1,38 +1,49 @@
 [
-  {
-    "id": "ch-tortilla-l",
-    "n": "Tortilla L con 3 huevos y 30 g queso chanco casero",
-    "u": "1 tortilla",
-    "slots": ["Desayuno"],
-    "charles": true
-  },
-  {
-    "id": "ch-plato-carne-carbo-veg",
-    "n": "Carne cocida, carbohidrato y vegetales",
-    "u": "100–120 g de carne cocida + 190 g de carbohidrato + vegetales",
-    "nota": "Pendiente: si los 190 g de carbohidrato son cocidos o crudos",
-    "slots": ["Almuerzo", "Cena"],
-    "charles": true
-  },
-  {
-    "id": "ch-pannacotta",
-    "n": "Panna cotta o gelatina proteica (media mañana)",
-    "u": "20 g gelatina bovina + 200 ml leche proteica + 150 g yogur + 1 scoop Grizzly",
-    "slots": ["Snacks"],
-    "charles": true
-  },
-  {
-    "id": "ch-banana-bread",
-    "n": "Banana bread proteico (media tarde)",
-    "u": "¼ del pan (4 porciones grandes; a veces se comparte en medias porciones)",
-    "slots": ["Snacks"],
-    "charles": true
-  },
-  {
-    "id": "ch-tostadas-francesas",
-    "n": "Tostadas francesas (media tarde)",
-    "u": "2 panes de proteína + 50 ml leche + 2 huevos",
-    "slots": ["Snacks"],
-    "charles": true
-  }
+  {"id":"ch-tortilla-l","n":"Tortilla L con 3 huevos y 30 g queso chanco casero","u":"1 tortilla","slots":["Desayuno"],"charles":true},
+  {"id":"ch-plato-carne-carbo-veg","n":"Carne cocida, carbohidrato y vegetales","u":"100–120 g de carne cocida + 190 g de carbohidrato + vegetales","nota":"Pendiente: si los 190 g de carbohidrato son cocidos o crudos","slots":["Almuerzo","Cena"],"charles":true},
+  {"id":"ch-pannacotta","n":"Panna cotta o gelatina proteica (media mañana)","u":"20 g gelatina bovina + 200 ml leche proteica + 150 g yogur + 1 scoop Grizzly","slots":["Snacks"],"charles":true},
+  {"id":"ch-banana-bread","n":"Banana bread proteico (media tarde)","u":"¼ del pan (4 porciones grandes; a veces se comparte en medias porciones)","slots":["Snacks"],"charles":true},
+  {"id":"ch-tostadas-francesas","n":"Tostadas francesas (media tarde)","u":"2 panes de proteína + 50 ml leche + 2 huevos","slots":["Snacks"],"charles":true},
+
+  {"id":"ch-huevos","n":"Huevos","u":"1 unidad","grupo":"proteina","charles":true},
+  {"id":"ch-pollo-cocido","n":"Pollo cocido","u":"100–120 g cocido","grupo":"proteina","charles":true},
+  {"id":"ch-pollo-molido","n":"Pollo molido","u":"100–130 g","grupo":"proteina","charles":true},
+  {"id":"ch-tuto","n":"Tuto de pollo","u":"1 pieza","grupo":"proteina","charles":true},
+  {"id":"ch-carne-cocida","n":"Carne cocida","u":"100–120 g cocida","grupo":"proteina","charles":true},
+  {"id":"ch-mechada","n":"Mechada","u":"100–120 g cocida","grupo":"proteina","charles":true},
+  {"id":"ch-cerdo","n":"Cerdo","u":"100–120 g cocido","grupo":"proteina","charles":true},
+  {"id":"ch-sobrecostilla","n":"Sobrecostilla","u":"100–120 g cocida","grupo":"proteina","charles":true},
+  {"id":"ch-salmon","n":"Salmón","u":"100–120 g","grupo":"proteina","charles":true},
+  {"id":"ch-pescado-blanco","n":"Pescado blanco","u":"100–120 g","grupo":"proteina","charles":true},
+  {"id":"ch-camarones","n":"Camarones","u":"porción","grupo":"proteina","charles":true},
+  {"id":"ch-gelatina-bovina","n":"Gelatina bovina","u":"20 g","grupo":"proteina","charles":true},
+  {"id":"ch-yogur","n":"Yogur","u":"150 g","grupo":"proteina","charles":true},
+  {"id":"ch-leche-proteica","n":"Leche proteica","u":"200 ml","grupo":"proteina","charles":true},
+  {"id":"ch-grizzly","n":"Proteína Grizzly","u":"1 scoop","grupo":"proteina","charles":true},
+
+  {"id":"ch-arroz","n":"Arroz blanco","u":"porción","grupo":"carbohidratos","nota":"Pendiente si los 190 g del plato son cocidos o crudos","charles":true},
+  {"id":"ch-papas","n":"Papas","u":"porción","grupo":"carbohidratos","charles":true},
+  {"id":"ch-camote","n":"Camote","u":"porción","grupo":"carbohidratos","charles":true},
+  {"id":"ch-fideos","n":"Fideos o tallarines","u":"porción","grupo":"carbohidratos","charles":true},
+  {"id":"ch-tortilla","n":"Tortilla L","u":"1 unidad","grupo":"carbohidratos","charles":true},
+  {"id":"ch-banana-bread-item","n":"Banana bread proteico","u":"¼ del pan","grupo":"carbohidratos","charles":true},
+  {"id":"ch-tostadas-item","n":"Tostadas francesas (pan de proteína)","u":"2 panes","grupo":"carbohidratos","charles":true},
+  {"id":"ch-pan-tangzhong","n":"Pan tangzhong","u":"1 bolita","grupo":"carbohidratos","charles":true},
+  {"id":"ch-naan","n":"Naan proteico","u":"1 unidad","grupo":"carbohidratos","charles":true},
+  {"id":"ch-semola","n":"Sémola Vivo","u":"1 pote","grupo":"carbohidratos","charles":true},
+  {"id":"ch-platano","n":"Plátano","u":"1 unidad","grupo":"carbohidratos","charles":true},
+
+  {"id":"ch-queso-chanco","n":"Queso chanco casero","u":"30 g","grupo":"grasa","charles":true},
+  {"id":"ch-queso-mantecoso","n":"Queso mantecoso","u":"20–30 g","grupo":"grasa","charles":true},
+  {"id":"ch-tocino","n":"Tocino","u":"30 g","grupo":"grasa","charles":true},
+  {"id":"ch-queso-crema","n":"Queso crema","u":"40–60 g","grupo":"grasa","charles":true},
+  {"id":"ch-mantequilla","n":"Mantequilla","u":"porción","grupo":"grasa","charles":true},
+
+  {"id":"ch-espinaca","n":"Espinaca","u":"porción","grupo":"vegetales","charles":true},
+  {"id":"ch-pimenton","n":"Pimentón","u":"porción","grupo":"vegetales","charles":true},
+  {"id":"ch-zanahoria","n":"Zanahoria","u":"porción","grupo":"vegetales","charles":true},
+  {"id":"ch-pepino","n":"Pepino","u":"porción","grupo":"vegetales","charles":true},
+  {"id":"ch-berenjena","n":"Berenjena","u":"porción","grupo":"vegetales","charles":true},
+  {"id":"ch-esparrago","n":"Espárrago","u":"porción","grupo":"vegetales","charles":true},
+  {"id":"ch-pickle","n":"Pickle casero","u":"porción","grupo":"vegetales","charles":true}
 ]
