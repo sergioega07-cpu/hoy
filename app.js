@@ -131,46 +131,46 @@ function weekMusculos(end){
 }
 function bloque(name,source,purpose,items,min,max){return {name,source,purpose,items,min,max}}
 function hipertrofiaBlocks(musculo){
- const src='Tu hipertrofia · '+musculo,carga='3–4 series; carga de hoy, 3–4 repeticiones en reserva';
+ const src='Tu hipertrofia · '+musculo,rir='; carga de hoy, 3–4 repeticiones en reserva';
  const s=(name,purpose,items,min,max)=>bloque(name,src,purpose,items,min,max);
  if(musculo==='Piernas')return [
-  s('Sentadilla','Patrón principal',[carga],6,8),
-  s('Estocadas','Control unilateral',['3 series por lado'],5,6),
-  s('Extensión de cuádriceps','Aislamiento',['3 series'],4,5),
-  s('Peso muerto con barra y mancuernas','Bisagra',['3 series; barra o mancuernas'],6,8),
-  s('Hack','Sentadilla en máquina',['3 series'],5,6),
-  s('Gemelos','Pantorrilla',['3 series'],4,5),
-  s('Abdomen','Cierre',['2–3 series'],3,4)
+  s('Sentadilla','Patrón principal',['4 series de 12'+rir],6,8),
+  s('Estocadas','Control unilateral',['4 series de 12 por lado'],5,6),
+  s('Extensión de cuádriceps','Aislamiento',['3 series de 12'],4,5),
+  s('Peso muerto con barra y mancuernas','Bisagra',['3 series de 12; barra o mancuernas'],6,8),
+  s('Hack','Sentadilla en máquina',['4 series de 20'],5,6),
+  s('Gemelos','Pantorrilla',['4 series de 20'],4,5),
+  s('Abdomen','Cierre',['4 series de 15'],3,4)
  ];
  if(musculo==='Pecho')return [
-  s('Press en banca con barra','Empuje horizontal',[carga],6,8),
-  s('Press inclinado con mancuernas','Empuje inclinado',['3–4 series'],6,8),
-  s('Fondos en paralelas','Empuje',['3 series; rango cómodo'],5,6),
-  s('Press declinado','Empuje declinado',['3 series'],5,6)
+  s('Press en banca con barra','Empuje horizontal',['4 series de 12'+rir],6,8),
+  s('Press inclinado con mancuernas','Empuje inclinado',['4 series de 8–10'],6,8),
+  s('Fondos en paralelas','Empuje',['4 series de 15; rango cómodo'],5,6),
+  s('Press declinado','Empuje declinado',['4 series de 15'],5,6)
  ];
  if(musculo==='Espalda')return [
-  s('Remo inclinado con barra','Tracción horizontal',[carga],6,8),
-  s('Remo con mancuerna','Tracción unilateral',['3 series por lado'],5,6),
-  s('Dominadas','Tracción vertical',['3 series; asistidas si hace falta'],5,6),
-  s('Remo en polea','Tracción complementaria',['3 series'],4,5)
+  s('Remo inclinado con barra','Tracción horizontal',['3 series de 12'+rir],6,8),
+  s('Remo con mancuerna','Tracción unilateral',['4 series de 15 por lado'],5,6),
+  s('Dominadas','Tracción vertical',['3 series de 12; asistidas si hace falta'],5,6),
+  s('Remo en polea','Tracción complementaria',['4 series de 15'],4,5)
  ];
  if(musculo==='Hombros')return [
-  s('Press militar','Empuje vertical',[carga],6,8),
-  s('Vuelos laterales','Deltoides lateral',['3–4 series'],5,6),
-  s('Press Arnold','Empuje de hombros',['3 series'],5,6),
-  s('Vuelos posteriores','Hombro posterior',['3 series'],4,5)
+  s('Press militar','Empuje vertical',['4 series de 12'+rir],6,8),
+  s('Vuelos laterales','Deltoides lateral',['4 series de 15'],5,6),
+  s('Press Arnold','Empuje de hombros',['4 series de 12'],5,6),
+  s('Vuelos posteriores','Hombro posterior',['4 series de 18'],4,5)
  ];
  if(musculo==='Brazos')return [
-  s('Curl de bíceps con mancuernas','Bíceps',[carga],5,6),
-  s('Curl en banco Scott','Bíceps',['3 series'],4,5),
-  s('Extensión de tríceps en polea','Tríceps',['3–4 series'],5,6),
-  s('Press francés','Tríceps',['3 series'],4,5),
-  s('Fondos entre bancos','Tríceps',['3 series'],4,5)
+  s('Curl de bíceps con mancuernas','Bíceps',['4 series de 10'+rir],5,6),
+  s('Curl en banco Scott','Bíceps',['4 series de 10'],4,5),
+  s('Extensión de tríceps en polea','Tríceps',['4 series de 15'],5,6),
+  s('Press francés','Tríceps',['4 series de 12'],4,5),
+  s('Fondos entre bancos','Tríceps',['4 series de 20'],4,5)
  ];
  if(musculo==='Core')return [
   s('Plancha','Control del tronco',['3 series de 20–40 s'],4,5),
-  s('Abdomen','Cierre',['3 series'],4,5),
-  s('Extensión lumbar','Cadena posterior',['3 series'],4,5)
+  s('Abdomen','Cierre',['4 series de 15'],4,5),
+  s('Extensión lumbar','Cadena posterior',['4 series de 20'],4,5)
  ];
  return [];
 }
@@ -479,18 +479,46 @@ function resumen(d){
 }
 
 // ---------- Estudio / Espiritual ----------
-const CALC={t:'Deriva f(x) = 3x² · sen(x) y evalúa f′(π/2).',h:'Pista: regla del producto, (uv)′ = u′v + uv′.'};
+const CALC={t:'Deriva f(x) = 3x² · sen(x) y evalúa f′(π/2).',h:'Pista: regla del producto, (uv)′ = u′v + uv′.',e:'Para evaluar: sen(π/2) = 1 y cos(π/2) = 0. Sustituye esos valores en f′(x).'};
+function normCalc(s){
+ return String(s||'').toLowerCase().replace(/π/g,'pi').replace(/seno|sin/g,'sen').replace(/coseno/g,'cos').replace(/[·•×]/g,'*').replace(/²/g,'^2').replace(/\s+/g,'');
+}
+function revisarCalc(txt){
+ const s=normCalc(txt);
+ const deriv=/6x\*?sen\(x\)/.test(s)&&/3x\^2\*?cos\(x\)/.test(s);
+ const ev=/(?:^|[^0-9a-z])3\*?pi(?:[^a-z]|$)/.test(s)||/9[.,]42\d*/.test(s);
+ if(deriv&&ev)return{estado:'ok',msg:'Bien: la derivada es 6x sen(x) + 3x² cos(x), y f′(π/2) = 3π.'};
+ if(deriv)return{estado:'parcial',msg:'La derivada va bien: 6x sen(x) + 3x² cos(x). Para evaluar, sen(π/2) = 1 y cos(π/2) = 0, así que f′(π/2) = 6·(π/2)·1 + 3·(π/2)²·0 = 3π.'};
+ if(ev)return{estado:'parcial',msg:'El valor 3π está bien, pero en la derivada faltó llegar a 6x sen(x) + 3x² cos(x).'};
+ return{estado:'mal',msg:'Aún no cuadra. La derivada, con la regla del producto, es 6x sen(x) + 3x² cos(x). Luego sen(π/2) = 1 y cos(π/2) = 0, así que f′(π/2) = 3π.'};
+}
 const BIBLIA_KEY='hoy:biblia';
+const LIBROS=[['Génesis',50],['Éxodo',40],['Levítico',27],['Números',36],['Deuteronomio',34],['Josué',24],['Jueces',21],['Rut',4],['1 Samuel',31],['2 Samuel',24],['1 Reyes',22],['2 Reyes',25],['1 Crónicas',29],['2 Crónicas',36],['Esdras',10],['Nehemías',13],['Ester',10],['Job',42],['Salmos',150],['Proverbios',31],['Eclesiastés',12],['Cantares',8],['Isaías',66],['Jeremías',52],['Lamentaciones',5],['Ezequiel',48],['Daniel',12],['Oseas',14],['Joel',3],['Amós',9],['Abdías',1],['Jonás',4],['Miqueas',7],['Nahúm',3],['Habacuc',3],['Sofonías',3],['Hageo',2],['Zacarías',14],['Malaquías',4],['Mateo',28],['Marcos',16],['Lucas',24],['Juan',21],['Hechos',28],['Romanos',16],['1 Corintios',16],['2 Corintios',13],['Gálatas',6],['Efesios',6],['Filipenses',4],['Colosenses',4],['1 Tesalonicenses',5],['2 Tesalonicenses',3],['1 Timoteo',6],['2 Timoteo',4],['Tito',3],['Filemón',1],['Hebreos',13],['Santiago',5],['1 Pedro',5],['2 Pedro',3],['1 Juan',5],['2 Juan',1],['3 Juan',1],['Judas',1],['Apocalipsis',22]];
 function lecturaHoy(){
  const pos=load(BIBLIA_KEY,null);
- if(pos&&pos.txt&&pos.ref)return pos;
+ if(pos&&pos.libro&&pos.cap)return pos;
  return null;
+}
+function capsDe(libro){const x=LIBROS.find(b=>b[0]===libro);return x?x[1]:0}
+function bibliaForm(pos){
+ const libro=pos&&pos.libro&&capsDe(pos.libro)?pos.libro:'';
+ const n=libro?capsDe(libro):0;
+ const cap=pos&&pos.cap&&n&&pos.cap>=1&&pos.cap<=n?pos.cap:1;
+ const libros=`<option value="">Libro…</option>`+LIBROS.map(([n])=>`<option${n===libro?' selected':''}>${n}</option>`).join('');
+ const caps=n?Array.from({length:n},(_,i)=>`<option${i+1===cap?' selected':''}>${i+1}</option>`).join(''):'<option value="">Capítulo…</option>';
+ return `<p class="kicker">Por dónde vas</p>
+ <p class="muted">Anota libro y capítulo. El versículo se busca desde ahí, no desde Génesis 1:1.</p>
+ <div class="grid2"><label><span class="kicker">Libro</span><select id="bibliaLibro">${libros}</select></label>
+ <label><span class="kicker">Capítulo</span><select id="bibliaCap">${caps}</select></label></div>
+ <p style="margin-top:10px"><button class="prim" data-biblia-save>Mostrar versículo</button></p>`;
 }
 function espiritualLectura(s,inTab){
  const pos=lecturaHoy();
  let h=`<section class="card"><h2>${inTab?'Lectura seguida':'Espiritual'}</h2>`;
- if(pos)h+=`<p class="verse">«${esc(pos.txt)}»</p><p class="muted">${esc(pos.ref)} · Reina-Valera 1909 (dominio público)</p>`;
+ if(pos&&pos.txt)h+=`<p class="verse">«${esc(pos.txt)}»</p><p class="muted">${esc(pos.ref|| (pos.libro+' '+pos.cap))} · Reina-Valera 1909 (dominio público)</p><p class="muted">Sigue leyendo 3 páginas desde ahí en tu Biblia.</p>`;
+ else if(pos)h+=`<p class="muted">Anotaste ${esc(pos.libro)} ${esc(String(pos.cap))}. El texto no se pudo cargar; vuelve a guardar con conexión.</p>`;
  else h+='<p class="muted">La lectura es seguida: el versículo del día se busca según por dónde vas, no el primero de Génesis por defecto.</p>';
+ if(inTab)h+=bibliaForm(pos);
  h+=`<p class="kicker">Las 3 páginas</p>
  <p class="muted">¿Leíste las 3 páginas de la Biblia?</p>
  <div class="row">${opts(['Sí','No'],s.biblia3,'biblia3')}</div>`;
@@ -538,8 +566,8 @@ function pickerHTML(b){
  return GRUPOS.map(g=>{
   const list=menuFoods(g.id);
   const opts=list.length?list.map(f=>`<option value="${f.id}">${esc(f.n)} — ${esc(f.u)}</option>`).join(''):'';
-  return `<label><span class="kicker">${g.label}</span><div class="row"><select data-sel="${b}" data-grupo="${g.id}"><option value="">Elegir ${g.label.toLowerCase()}…</option>${opts}</select>
- <input type="number" inputmode="decimal" min="0.25" step="0.25" value="1" data-qty="${b}" data-grupo="${g.id}" style="width:90px" aria-label="porciones"><button class="sm prim" data-add="${b}" data-grupo="${g.id}">Agregar</button></div></label>`;
+  return `<div class="food-pick"><span class="kicker">Opción · ${g.label}</span><div class="row"><select data-sel="${b}" data-grupo="${g.id}"><option value="">Elegir ${g.label.toLowerCase()}…</option>${opts}</select>
+ <input type="number" inputmode="decimal" min="0.25" step="0.25" value="1" data-qty="${b}" data-grupo="${g.id}" style="width:90px" aria-label="porciones"><button class="sm prim" data-add="${b}" data-grupo="${g.id}">Agregar</button></div></div>`;
  }).join('');
 }
 function listaHTML(d,b){
@@ -566,9 +594,13 @@ function vEntrenar(){
 }
 function vEstudiar(){
  const s=dia();
- return `<section class="card"><h2>Cálculo</h2><p class="muted">Ejemplo mientras conectamos tu nivel.</p><p class="serif">${CALC.t}</p><p class="muted">${CALC.h}</p>
- <textarea id="calcTxt" placeholder="Desarrolla aquí paso a paso…">${esc(s.calcTxt||'')}</textarea>
- <div class="row" style="margin-top:8px"><button class="${s.calc==='Hecho'?'on':''}" data-calc="Hecho">Hecho</button><button class="${s.calc==='Después'?'on':''}" data-calc="Después">Después</button></div></section>`;
+ let h=`<section class="card"><h2>Cálculo</h2><p class="muted">Ejemplo mientras conectamos tu nivel.</p><p class="serif">${CALC.t}</p><p class="muted">${CALC.h}</p>
+ <p class="muted">${CALC.e}</p>
+ <textarea id="calcTxt" placeholder="Desarrolla aquí la derivada y el valor de f′(π/2)…">${esc(s.calcTxt||'')}</textarea>
+ <div class="row" style="margin-top:8px"><button class="prim" data-calc-check>Comprobar</button><button class="${s.calc==='Hecho'?'on':''}" data-calc="Hecho">Hecho</button><button class="${s.calc==='Después'?'on':''}" data-calc="Después">Después</button></div>`;
+ if(s.calcChk&&s.calcMsg)h+=`<p class="${s.calcChk==='ok'?'ok':s.calcChk==='mal'?'bad':'muted'}" style="margin-top:12px">${esc(s.calcMsg)}</p>`;
+ h+='</section>';
+ return h;
 }
 function vEspiritual(){
  const s=dia();
@@ -612,6 +644,28 @@ document.addEventListener('click',async e=>{
  if(d.entrena)return setDia({entrena:d.entrena,descanso:d.entrena==='Sí'?'':dia().descanso});
  if(d.descanso)return setDia({descanso:d.descanso});
  if(d.biblia3)return setDia({biblia3:d.biblia3});
+ if('bibliaSave' in d){
+  const libro=($('#bibliaLibro')||{}).value||'',cap=+(($('#bibliaCap')||{}).value||0);
+  const nr=LIBROS.findIndex(x=>x[0]===libro)+1;
+  if(!nr||!cap)return alert('Elige libro y capítulo.');
+  try{
+   b.disabled=true;b.textContent='Cargando…';
+   const r=await fetch('https://api.getbible.net/v2/valera/'+nr+'/'+cap+'.json');
+   if(!r.ok)throw new Error('http');
+   const data=await r.json();
+   const vs=(data.verses||[]).slice(0,3);
+   if(!vs.length)throw new Error('vacío');
+   const txt=vs.map(v=>v.verse+' '+v.text).join(' ');
+   const last=vs[vs.length-1].verse;
+   const ref=(data.name||(libro+' '+cap))+':1–'+last;
+   save(BIBLIA_KEY,{libro,cap,nr,txt,ref});
+   return render();
+  }catch(err){
+   save(BIBLIA_KEY,{libro,cap,nr,txt:'',ref:libro+' '+cap});
+   alert('Quedó anotado '+libro+' '+cap+', pero no se pudo cargar el texto ahora. Prueba de nuevo con conexión.');
+   return render();
+  }
+ }
  if('hecho' in d){
   const id=d.hecho,sesiones=getSesiones().map(x=>({...x,hecho:x.id===id?!x.hecho:!!x.hecho}));
   return saveSesiones(sesiones);
@@ -622,6 +676,11 @@ document.addEventListener('click',async e=>{
   const id=String(d.delSes);
   if(editSesionId===id)editSesionId=null;
   return saveSesiones(getSesiones().filter(x=>String(x.id)!==id));
+ }
+ if('calcCheck' in d){
+  const txt=($('#calcTxt')||{}).value||'';
+  const r=revisarCalc(txt);
+  return setDia({calcTxt:txt,calcChk:r.estado,calcMsg:r.msg});
  }
  if(d.calc)return setDia({calc:d.calc,calcTxt:$('#calcTxt').value});
  if(d.mf!==undefined){const n=+d.mf;save('hoy:menuFecha',n===0?null:addDays(menuTarget(),n));return render()}
@@ -642,6 +701,13 @@ document.addEventListener('click',async e=>{
   const file=new File([blob],audioName(d.shareKey,blob.type),{type:blob.type||'audio/webm'});
   try{if(navigator.canShare&&!navigator.canShare({files:[file]}))throw new Error('Este dispositivo no puede compartir el archivo');
    await navigator.share({files:[file],title:file.name})}catch(err){if(err.name!=='AbortError')alert('No se pudo compartir: '+err.message)}}
+});
+document.addEventListener('change',e=>{
+ if(e.target.id==='bibliaLibro'){
+  const n=capsDe(e.target.value),sel=$('#bibliaCap');
+  if(!sel)return;
+  sel.innerHTML=n?Array.from({length:n},(_,i)=>`<option>${i+1}</option>`).join(''):'<option value="">Capítulo…</option>';
+ }
 });
 document.addEventListener('submit',e=>{
  if(e.target.id==='sueno-form'){

@@ -97,6 +97,7 @@ ul{padding-left:18px;margin:6px 0}li{margin:3px 0}
 .macros b{display:block;font-size:1.15rem;color:var(--sand-hi)}
 .ok{color:var(--ok)}.falta{color:var(--low)}.bad{color:var(--bad)}
 .item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(190,172,138,.14);font-size:.92rem}
+.food-pick{margin:14px 0 0}.food-pick .kicker{margin-bottom:6px}
 .verse{font-family:var(--f-accent);font-size:1.45rem;line-height:1.45;color:var(--ivory)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 audio{width:100%;margin-top:8px}

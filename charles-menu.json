@@ -20,6 +20,10 @@
   {"id":"ch-yogur","n":"Yogur","u":"150 g","grupo":"proteina","charles":true},
   {"id":"ch-leche-proteica","n":"Leche proteica","u":"200 ml","grupo":"proteina","charles":true},
   {"id":"ch-grizzly","n":"Proteína Grizzly","u":"1 scoop","grupo":"proteina","charles":true},
+  {"id":"ch-edamame","n":"Edamame","u":"40 g secos (para ramen)","grupo":"proteina","charles":true},
+  {"id":"ch-leche","n":"Leche","u":"200–250 ml","grupo":"proteina","charles":true},
+  {"id":"ch-creami","n":"Creami de yogurt","u":"1 pint (comodín)","grupo":"proteina","charles":true},
+  {"id":"ch-creami-manjar","n":"Creami manjar-plátano","u":"1 pint","grupo":"proteina","charles":true},
 
   {"id":"ch-arroz","n":"Arroz blanco","u":"porción","grupo":"carbohidratos","nota":"Pendiente si los 190 g del plato son cocidos o crudos","charles":true},
   {"id":"ch-papas","n":"Papas","u":"porción","grupo":"carbohidratos","charles":true},
@@ -32,12 +36,27 @@
   {"id":"ch-naan","n":"Naan proteico","u":"1 unidad","grupo":"carbohidratos","charles":true},
   {"id":"ch-semola","n":"Sémola Vivo","u":"1 pote","grupo":"carbohidratos","charles":true},
   {"id":"ch-platano","n":"Plátano","u":"1 unidad","grupo":"carbohidratos","charles":true},
+  {"id":"ch-arroz-gimbap","n":"Gimbap","u":"1 unidad","grupo":"carbohidratos","charles":true},
+  {"id":"ch-pie-limon","n":"Pie limón fit","u":"1 porción","grupo":"carbohidratos","charles":true},
+  {"id":"ch-barras-trail","n":"Barras trail (pepitas, arándanos, chocolate)","u":"1 barra","grupo":"carbohidratos","charles":true},
+  {"id":"ch-energy-balls","n":"Energy balls","u":"1 unidad","grupo":"carbohidratos","charles":true},
+  {"id":"ch-brownie-platano","n":"Brownie de plátano","u":"1 feta","grupo":"carbohidratos","charles":true},
+  {"id":"ch-hokkaido","n":"Pan Hokkaido","u":"1/4","grupo":"carbohidratos","charles":true},
+  {"id":"ch-naranja","n":"Naranja","u":"1 unidad","grupo":"carbohidratos","charles":true},
+  {"id":"ch-arandanos","n":"Arándanos","u":"80–100 g","grupo":"carbohidratos","charles":true},
+  {"id":"ch-manjar-alulosa","n":"Manjar Daily alulosa","u":"40–50 g","grupo":"carbohidratos","charles":true},
+  {"id":"ch-cheesecake","n":"Cheesecake","u":"1 porción","grupo":"carbohidratos","charles":true},
+  {"id":"ch-tartaleta-manzana","n":"Tartaleta de manzana","u":"1 unidad","grupo":"carbohidratos","charles":true},
+  {"id":"ch-chocolate","n":"Trozo de chocolate","u":"1 trozo","grupo":"carbohidratos","charles":true},
+  {"id":"ch-pannacotta-item","n":"Panna cotta o gelatina proteica","u":"1 unidad","grupo":"carbohidratos","charles":true},
 
   {"id":"ch-queso-chanco","n":"Queso chanco casero","u":"30 g","grupo":"grasa","charles":true},
   {"id":"ch-queso-mantecoso","n":"Queso mantecoso","u":"20–30 g","grupo":"grasa","charles":true},
   {"id":"ch-tocino","n":"Tocino","u":"30 g","grupo":"grasa","charles":true},
   {"id":"ch-queso-crema","n":"Queso crema","u":"40–60 g","grupo":"grasa","charles":true},
   {"id":"ch-mantequilla","n":"Mantequilla","u":"porción","grupo":"grasa","charles":true},
+  {"id":"ch-queso-reggianito","n":"Queso reggianito","u":"60 g rallado","grupo":"grasa","charles":true},
+  {"id":"ch-frutos-secos","n":"Frutos secos","u":"porción","grupo":"grasa","charles":true},
 
   {"id":"ch-espinaca","n":"Espinaca","u":"porción","grupo":"vegetales","charles":true},
   {"id":"ch-pimenton","n":"Pimentón","u":"porción","grupo":"vegetales","charles":true},
@@ -45,5 +64,7 @@
   {"id":"ch-pepino","n":"Pepino","u":"porción","grupo":"vegetales","charles":true},
   {"id":"ch-berenjena","n":"Berenjena","u":"porción","grupo":"vegetales","charles":true},
   {"id":"ch-esparrago","n":"Espárrago","u":"porción","grupo":"vegetales","charles":true},
-  {"id":"ch-pickle","n":"Pickle casero","u":"porción","grupo":"vegetales","charles":true}
+  {"id":"ch-pickle","n":"Pickle casero","u":"porción","grupo":"vegetales","charles":true},
+  {"id":"ch-cebolla","n":"Cebolla","u":"porción","grupo":"vegetales","charles":true},
+  {"id":"ch-betarraga","n":"Betarraga (jugo o polvo)","u":"50 ml de jugo o 5–10 g de polvo","grupo":"vegetales","charles":true}
 ]
