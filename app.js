@@ -30,13 +30,13 @@ function weightGap(kg){
 const weightDate=s=>s.split('-').reverse().join('/');
 function weightCard(){
  const records=weightRecords(),latest=records[0];
- return `<section class="card weight-card" aria-labelledby="weight-title"><p class="kicker" id="weight-title">Peso</p>
+ return `<section class="card weight-card" aria-labelledby="weight-title"><p class="kicker" id="weight-title">Peso actual</p>
  <p class="muted">Actual · ${weightDate(latest.date)}</p>
  <p class="weight-current"><strong>${kgFmt(latest.kg)}</strong><span> kg</span></p>
  <p class="weight-meta">Meta 79–81 kg · ${weightGap(latest.kg)}</p>
  <form id="weight-form"><div class="grid2"><label><span class="kicker">Peso (kg)</span><input id="weight-kg" name="kg" type="text" inputmode="decimal" placeholder="88,9" pattern="[0-9]+([.,][0-9]+)?" required></label>
  <label><span class="kicker">Fecha</span><input id="weight-date" name="date" type="date" value="${today()}" required></label></div>
- <button class="prim" type="submit">Anotar</button><p class="muted">Si anotas la misma fecha, reemplaza el registro.</p></form>
+ <button class="prim" type="submit">Anotar</button><p class="muted">Anota el peso en ayunas. Si anotas la misma fecha, reemplaza el registro.</p></form>
  <p class="kicker">Registros recientes</p><ul class="weight-records">${records.slice(0,10).map(r=>`<li><time datetime="${r.date}">${weightDate(r.date)}</time><strong>${kgFmt(r.kg)} kg</strong></li>`).join('')}</ul>
  <p class="muted">Datos guardados solo en este navegador.</p></section>`;
 }
@@ -126,13 +126,15 @@ function fmtSueno(s){
  const h=+s.suenoH,m=s.suenoM===''||s.suenoM==null?0:+s.suenoM;
  return m?`${h} h ${m} min`:`${h} h`;
 }
-function listoParaEntrenar(s){return ['Verde','Amarillo','Rojo'].includes(s.rec)&&hasSueno(s)}
+function listoParaEntrenar(s){return ['Verde','Amarillo','Rojo'].includes(s.rec)&&hasSueno(s)&&['Bien','Normal','Cansado','Bajo'].includes(s.animo)}
 function hoyEstado(s){
  const parts=[];
+ const w=weightRecords()[0];
+ if(w)parts.push(kgFmt(w.kg)+' kg');
+ if(s.animo)parts.push('ánimo '+s.animo);
  if(hasSueno(s))parts.push(fmtSueno(s)+' de sueño');
  if(s.rec)parts.push('sensación '+s.rec);
- if(s.animo)parts.push('ánimo '+s.animo);
- return parts.length?'Hoy anotaste: '+parts.join(', ')+'.':'';
+ return parts.length?'Desde Hoy: '+parts.join(', ')+'.':'';
 }
 function suenoForm(s){
  return `<form id="sueno-form" class="training-chooser"><div class="grid2"><label><span class="kicker">Horas dormidas</span><input name="suenoH" type="number" inputmode="numeric" min="0" max="24" step="1" value="${s.suenoH??''}" required placeholder="Ej. 8"></label>
@@ -140,10 +142,11 @@ function suenoForm(s){
  <button type="submit" class="prim">Anotar sueño</button></form>`;
 }
 function faltaParaEntrenar(s){
- let h='<p class="muted">No se arma un entrenamiento sin tu sensación muscular y las horas que dormiste.</p>';
- if(!hasSueno(s))h+=suenoForm(s);
- if(!['Verde','Amarillo','Rojo'].includes(s.rec))h+=`<p class="muted">¿Cómo está tu sensación muscular?</p><div class="row">${[['Verde','g'],['Amarillo','y'],['Rojo','r']].map(([n,c])=>`<button class="${c} ${s.rec===n?'on':''}" data-rec="${n}">${n}</button>`).join('')}</div>`;
- return h;
+ const falta=[];
+ if(!['Bien','Normal','Cansado','Bajo'].includes(s.animo))falta.push('el ánimo');
+ if(!hasSueno(s))falta.push('las horas de sueño');
+ if(!['Verde','Amarillo','Rojo'].includes(s.rec))falta.push('la sensación muscular');
+ return `<p class="muted">El plan se arma con lo que anotaste en Hoy. Falta ${esc(falta.join(', '))}.</p><button data-go="hoy">Ir a Hoy</button>`;
 }
 function trainingPanel(){
  const s=dia(),sesiones=getSesiones();
@@ -179,13 +182,6 @@ function trainingPanel(){
   h+=`<div class="row"><button class="${ses.hecho?'on':''}" data-hecho="${esc(ses.id)}">${ses.hecho?'Sesión hecha ✓':'Marcar sesión hecha'}</button></div>`;
   if(ses.hecho)h+=`<h3>Registro para Charles</h3>${recUI('entreno:'+D+':'+ses.id,'Cuéntale qué hiciste, carga real, cardio, cómo te sentiste y si algo dolió o quedó corto.')}<p class="muted">Queda en este teléfono. Envíamelo en este chat y se lo paso a Charles.</p>`;
  });
- return h;
-}
-function trainingHoyResumen(){
- const s=dia(),sesiones=getSesiones();
- let h=trainingLog(sesiones);
- if(s.entrena==='No'&&s.descanso)h+=`<p class="muted">${esc(s.descanso)}.</p>`;
- h+=`<p class="muted">El entrenamiento se arma en Entrenar, no aquí.</p><button data-go="entrenar">${sesiones.length?'Ver o sumar una sesión':'¿Vas a entrenar?'}</button>`;
  return h;
 }
 function sesion(p,ses){
@@ -278,7 +274,6 @@ function vHoy(){
  ${[['Verde','g'],['Amarillo','y'],['Rojo','r']].map(([n,c])=>`<button class="${c} ${s.rec===n?'on':''}" data-rec="${n}">${n}</button>`).join('')}</div>
  ${s.rec?'':'<p class="muted">Sin tu sensación muscular no se arma un entrenamiento.</p>'}
  ${s.rec==='Rojo'?'<p class="muted">Sensación muscular en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
- <section class="card"><h2>Entrenamiento</h2>${trainingHoyResumen()}</section>
  <section class="card"><h2>Macros de hoy</h2>${resumen(D)}
   <h3>Extra de hoy</h3>${pickerHTML('Extras')}${listaHTML(D,'Extras')}</section>
  <section class="card"><h2>Estudio</h2><p>${CALC.t}</p><button data-go="estudiar">Desarrollar</button> ${s.calc?`<span class="muted">· ${s.calc}</span>`:''}</section>
@@ -396,7 +391,7 @@ document.addEventListener('submit',e=>{
   return setDia({suenoH:h,suenoM:m});
  }
  if(e.target.id==='training-form'){
-  e.preventDefault();if(!listoParaEntrenar(dia()))return alert('Anota primero tu sensación muscular y las horas que dormiste.');
+  e.preventDefault();if(!listoParaEntrenar(dia()))return alert('Anota primero en Hoy tu ánimo, tu sensación muscular y las horas que dormiste.');
   const f=new FormData(e.target),total=Number(f.get('total')),rama=f.get('rama'),musculo=f.get('musculo');
   if(!TIPOS.includes(rama)||!Number.isSafeInteger(total)||total<0)return alert('Elige un tipo y minutos enteros desde cero.');
   if(rama==='Hipertrofia'&&!MUSCULOS.includes(musculo))return alert('Elige qué músculo vas a entrenar.');
@@ -404,7 +399,7 @@ document.addEventListener('submit',e=>{
   return setDia({sesiones:[...getSesiones(),ses],entrena:''});
  }
  if(e.target.id==='recovery-form'){
-  e.preventDefault();if(!listoParaEntrenar(dia()))return alert('Anota primero tu sensación muscular y las horas que dormiste.');
+  e.preventDefault();if(!listoParaEntrenar(dia()))return alert('Anota primero en Hoy tu ánimo, tu sensación muscular y las horas que dormiste.');
   const f=new FormData(e.target),total=Number(f.get('total')),cardio=f.get('cardio');
   if(!CARDIO_LIGERO.includes(cardio)||!Number.isSafeInteger(total)||total<0)return alert('Elige un cardio ligero y minutos enteros desde cero.');
   const ses={id:'s'+Date.now(),rama:'Recovery day',cardioRecovery:cardio,minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
