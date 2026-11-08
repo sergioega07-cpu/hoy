@@ -204,9 +204,9 @@ const opts=(list,cur,attr)=>list.map(x=>`<button class="${x===cur?'on':''}" data
 function vHoy(){
  const s=dia();
  let h=`${weightCard()}<section class="card"><h2>Ánimo</h2><div class="row">${opts(['Bien','Normal','Cansado','Bajo'],s.animo,'animo')}</div></section>
- <section class="card"><h2>Recuperación (Whoop, manual)</h2><div class="row">
+ <section class="card"><h2>Sensación muscular</h2><div class="row">
  ${[['Verde','g'],['Amarillo','y'],['Rojo','r']].map(([n,c])=>`<button class="${c} ${s.rec===n?'on':''}" data-rec="${n}">${n}</button>`).join('')}</div>
- ${s.rec==='Rojo'?'<p class="muted">Recuperación en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
+ ${s.rec==='Rojo'?'<p class="muted">Sensación muscular en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
  <section class="card"><h2>Entrenamiento</h2><p class="muted">¿Vas a entrenar?</p><div class="row">${opts(['Sí','No'],s.entrena,'entrena')}</div>`;
  if(s.entrena==='Sí')h+=trainingChooser(true);
  h+=`</section>
