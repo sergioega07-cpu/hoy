@@ -114,9 +114,24 @@ function getSesiones(){
  if(s.rama&&s.minutosTotal!==''&&s.minutosTotal!=null)return [trainingChoice({...s,id:s.id||'legacy'})];
  return [];
 }
+function sesionEditForm(x){
+ if(x.rama==='Recovery day'){
+  return `<form id="sesion-edit-form" data-edit-id="${esc(x.id)}" class="training-chooser"><label><span class="kicker">Cardio ligero</span><select name="cardio" required>${CARDIO_LIGERO.map(t=>`<option${t===x.cardioRecovery?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
+ <label><span class="kicker">Minutos</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required value="${esc(x.minutosTotal)}"></label>
+ <div class="row"><button type="submit" class="prim">Guardar</button><button type="button" data-edit-cancel>Cancelar</button></div></form>`;
+ }
+ return `<form id="sesion-edit-form" data-edit-id="${esc(x.id)}" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required>${TIPOS.map(t=>`<option${t===x.rama?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
+ <label id="musculo-field-edit"${x.rama==='Hipertrofia'?'':' hidden'}><span class="kicker">¿Qué músculo vas a entrenar?</span><select name="musculo"${x.rama==='Hipertrofia'?' required':''}><option value="">Elige el músculo…</option>${MUSCULOS.map(t=>`<option${t===x.musculo?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
+ <label><span class="kicker">Minutos</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required value="${esc(x.minutosTotal)}"></label>
+ <div class="row"><button type="submit" class="prim">Guardar</button><button type="button" data-edit-cancel>Cancelar</button></div></form>`;
+}
 function trainingLog(sesiones){
  if(!sesiones.length)return '';
- return `<p class="kicker">Registro de hoy</p><ul class="training-log">${sesiones.map(x=>`<li><strong>${esc(x.rama)}</strong>${x.musculo?' · '+esc(x.musculo):''}${x.cardioRecovery?' · '+esc(x.cardioRecovery):''} · ${esc(x.minutosTotal)} min${x.hecho?' · hecha':''}</li>`).join('')}</ul>`;
+ return `<p class="kicker">Registro de hoy</p><ul class="training-log">${sesiones.map(x=>{
+  const label=`<strong>${esc(x.rama)}</strong>${x.musculo?' · '+esc(x.musculo):''}${x.cardioRecovery?' · '+esc(x.cardioRecovery):''} · ${esc(x.minutosTotal)} min${x.hecho?' · hecha':''}`;
+  if(editSesionId===x.id)return `<li>${sesionEditForm(x)}</li>`;
+  return `<li><span class="log-text">${label}</span><span class="log-actions"><button type="button" data-edit-ses="${esc(x.id)}">Editar</button><button type="button" data-del-ses="${esc(x.id)}">Borrar</button></span></li>`;
+ }).join('')}</ul>`;
 }
 function hasSueno(s){
  const h=s.suenoH,m=s.suenoM===''||s.suenoM==null?0:s.suenoM;
@@ -261,7 +276,7 @@ const getAudio=async k=>{const db=await idb();return new Promise(r=>{const q=db.
 
 // ---------- Vistas ----------
 const D=today();
-let tab='hoy';
+let tab='hoy',editSesionId=null;
 function dia(){return load(dayKey(D),{})}
 function setDia(p){save(dayKey(D),{...dia(),...p});render()}
 const opts=(list,cur,attr)=>list.map(x=>`<button class="${x===cur?'on':''}" data-${attr}="${esc(x)}">${esc(x)}</button>`).join('');
@@ -365,6 +380,14 @@ document.addEventListener('click',async e=>{
   const id=d.hecho,sesiones=getSesiones().map(x=>({...x,hecho:x.id===id?!x.hecho:!!x.hecho}));
   return setDia({sesiones,hecho:sesiones.some(x=>x.hecho)});
  }
+ if(d.editSes){editSesionId=d.editSes;return render()}
+ if('editCancel' in d){editSesionId=null;return render()}
+ if(d.delSes){
+  if(!confirm('¿Borrar esta sesión del registro de hoy?'))return;
+  if(editSesionId===d.delSes)editSesionId=null;
+  const sesiones=getSesiones().filter(x=>x.id!==d.delSes);
+  return setDia({sesiones,hecho:sesiones.some(x=>x.hecho)});
+ }
  if(d.calc)return setDia({calc:d.calc,calcTxt:$('#calcTxt').value});
  if(d.mf!==undefined){const n=+d.mf;save('hoy:menuFecha',n===0?null:addDays(menuTarget(),n));return render()}
  if(d.add){const blk=d.add,id=document.querySelector(`[data-sel="${blk}"]`).value,q=parseFloat(document.querySelector(`[data-qty="${blk}"]`).value)||1;if(!id)return;
@@ -389,6 +412,25 @@ document.addEventListener('submit',e=>{
   e.preventDefault();const f=new FormData(e.target),h=Number(f.get('suenoH')),m=f.get('suenoM')===''||f.get('suenoM')==null?0:Number(f.get('suenoM'));
   if(!Number.isSafeInteger(h)||h<0||h>24||!Number.isSafeInteger(m)||m<0||m>59)return alert('Escribe horas (0 a 24) y minutos (0 a 59).');
   return setDia({suenoH:h,suenoM:m});
+ }
+ if(e.target.id==='sesion-edit-form'){
+  e.preventDefault();
+  const id=e.target.dataset.editId,f=new FormData(e.target),total=Number(f.get('total'));
+  const sesiones=getSesiones(),i=sesiones.findIndex(x=>x.id===id);
+  if(i<0)return;
+  const prev=sesiones[i];
+  if(prev.rama==='Recovery day'&&!TIPOS.includes(f.get('rama')||'')){
+   const cardio=f.get('cardio');
+   if(!CARDIO_LIGERO.includes(cardio)||!Number.isSafeInteger(total)||total<0)return alert('Elige un cardio ligero y minutos enteros desde cero.');
+   sesiones[i]={...prev,cardioRecovery:cardio,minutosTotal:total};
+  }else{
+   const rama=f.get('rama'),musculo=f.get('musculo');
+   if(!TIPOS.includes(rama)||!Number.isSafeInteger(total)||total<0)return alert('Elige un tipo y minutos enteros desde cero.');
+   if(rama==='Hipertrofia'&&!MUSCULOS.includes(musculo))return alert('Elige qué músculo vas a entrenar.');
+   sesiones[i]={...prev,rama,musculo:rama==='Hipertrofia'?musculo:'',cardioRecovery:'',minutosTotal:total};
+  }
+  editSesionId=null;
+  return setDia({sesiones});
  }
  if(e.target.id==='training-form'){
   e.preventDefault();if(!listoParaEntrenar(dia()))return alert('Anota primero en Hoy tu ánimo, tu sensación muscular y las horas que dormiste.');
@@ -415,8 +457,8 @@ document.addEventListener('submit',e=>{
  render();
 });
 document.addEventListener('change',e=>{
- if(e.target.name==='rama'&&e.target.form&&e.target.form.id==='training-form'){
-  const field=$('#musculo-field'),sel=field&&field.querySelector('select'),show=e.target.value==='Hipertrofia';
+ if(e.target.name==='rama'&&e.target.form&&(e.target.form.id==='training-form'||e.target.form.id==='sesion-edit-form')){
+  const field=$(e.target.form.id==='sesion-edit-form'?'#musculo-field-edit':'#musculo-field'),sel=field&&field.querySelector('select'),show=e.target.value==='Hipertrofia';
   if(field)field.hidden=!show;
   if(sel){sel.required=show;if(!show)sel.value='';}
  }
