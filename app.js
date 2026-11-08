@@ -110,9 +110,15 @@ function trainingPlan(s,date){
 }
 function getSesiones(){
  const s=dia();
- if(Array.isArray(s.sesiones)&&s.sesiones.length)return s.sesiones.map(x=>trainingChoice({...x,id:x.id||'legacy'}));
- if(s.rama&&s.minutosTotal!==''&&s.minutosTotal!=null)return [trainingChoice({...s,id:s.id||'legacy'})];
- return [];
+ let list;
+ if(Array.isArray(s.sesiones))list=s.sesiones;
+ else if(s.rama&&s.minutosTotal!==''&&s.minutosTotal!=null)list=[{rama:s.rama,musculo:s.musculo,cardioRecovery:s.cardioRecovery,minutosTotal:s.minutosTotal,minutosHechos:s.minutosHechos,cardioHecho:s.cardioHecho,hecho:s.hecho,id:s.id||'legacy'}];
+ else list=[];
+ return list.map((x,i)=>trainingChoice({rama:x.rama,musculo:x.musculo,cardioRecovery:x.cardioRecovery,minutosTotal:x.minutosTotal,minutosHechos:x.minutosHechos,cardioHecho:x.cardioHecho,hecho:x.hecho,id:x.id||('s-'+i)}));
+}
+function saveSesiones(sesiones,extra){
+ if(editSesionId&&!sesiones.some(x=>x.id===editSesionId))editSesionId=null;
+ return setDia({sesiones,hecho:sesiones.some(x=>x.hecho),rama:'',minutosTotal:'',minutosHechos:0,cardioHecho:0,musculo:'',cardioRecovery:'',id:'',...(extra||{})});
 }
 function sesionEditForm(x){
  if(x.rama==='Recovery day'){
@@ -386,15 +392,14 @@ document.addEventListener('click',async e=>{
  if(d.biblia3)return setDia({biblia3:d.biblia3});
  if('hecho' in d){
   const id=d.hecho,sesiones=getSesiones().map(x=>({...x,hecho:x.id===id?!x.hecho:!!x.hecho}));
-  return setDia({sesiones,hecho:sesiones.some(x=>x.hecho)});
+  return saveSesiones(sesiones);
  }
  if(d.editSes){editSesionId=d.editSes;return render()}
  if('editCancel' in d){editSesionId=null;return render()}
  if(d.delSes){
-  if(!confirm('¿Borrar esta sesión del registro de hoy?'))return;
-  if(editSesionId===d.delSes)editSesionId=null;
-  const sesiones=getSesiones().filter(x=>x.id!==d.delSes);
-  return setDia({sesiones,hecho:sesiones.some(x=>x.hecho)});
+  const id=String(d.delSes);
+  if(editSesionId===id)editSesionId=null;
+  return saveSesiones(getSesiones().filter(x=>String(x.id)!==id));
  }
  if(d.calc)return setDia({calc:d.calc,calcTxt:$('#calcTxt').value});
  if(d.mf!==undefined){const n=+d.mf;save('hoy:menuFecha',n===0?null:addDays(menuTarget(),n));return render()}
@@ -438,7 +443,7 @@ document.addEventListener('submit',e=>{
    sesiones[i]={...prev,rama,musculo:rama==='Hipertrofia'?musculo:'',cardioRecovery:'',minutosTotal:total};
   }
   editSesionId=null;
-  return setDia({sesiones});
+  return saveSesiones(sesiones);
  }
  if(e.target.id==='training-form'){
   e.preventDefault();if(!listoParaEntrenar(dia()))return alert('Anota primero en Hoy tu ánimo, tu sensación muscular y las horas que dormiste.');
@@ -446,14 +451,14 @@ document.addEventListener('submit',e=>{
   if(!TIPOS.includes(rama)||!Number.isSafeInteger(total)||total<0)return alert('Elige un tipo y minutos enteros desde cero.');
   if(rama==='Hipertrofia'&&!MUSCULOS.includes(musculo))return alert('Elige qué músculo vas a entrenar.');
   const ses={id:'s'+Date.now(),rama,musculo:rama==='Hipertrofia'?musculo:'',minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
-  return setDia({sesiones:[...getSesiones(),ses],entrena:''});
+  return saveSesiones([...getSesiones(),ses],{entrena:''});
  }
  if(e.target.id==='recovery-form'){
   e.preventDefault();if(!listoParaEntrenar(dia()))return alert('Anota primero en Hoy tu ánimo, tu sensación muscular y las horas que dormiste.');
   const f=new FormData(e.target),total=Number(f.get('total')),cardio=f.get('cardio');
   if(!CARDIO_LIGERO.includes(cardio)||!Number.isSafeInteger(total)||total<0)return alert('Elige un cardio ligero y minutos enteros desde cero.');
   const ses={id:'s'+Date.now(),rama:'Recovery day',cardioRecovery:cardio,minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
-  return setDia({sesiones:[...getSesiones(),ses]});
+  return saveSesiones([...getSesiones(),ses]);
  }
  if(e.target.id!=='weight-form')return;
  e.preventDefault();
