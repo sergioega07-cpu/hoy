@@ -126,21 +126,30 @@ function trainingPlan(s,date){
  plan.middle=Math.floor((plan.cardio-firstCardio)/2);plan.last=plan.cardio-firstCardio-plan.middle;
  plan.margin=work;return plan;
 }
-function trainingChooser(onHoy=false){
- const s=trainingChoice(dia()),ready=s.rama&&s.minutosTotal!=='';
- let h=`<form id="training-form" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required><option value="">Elige tu sesión…</option>${TIPOS.map(t=>`<option ${s.rama===t?'selected':''}>${esc(t)}</option>`).join('')}</select></label>
- <div class="grid2"><label><span class="kicker">Minutos disponibles</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required value="${esc(s.minutosTotal)}" placeholder="Ej. 40"></label><label><span class="kicker">Minutos ya hechos</span><input name="already" type="number" inputmode="numeric" min="0" step="1" required value="${esc(s.minutosHechos)}"></label></div>
- <p class="muted">Disponibles = tiempo total de esta sesión, incluido lo que ya hiciste. Ej.: 40 − 20 = 20 min por hacer.</p>
- <details class="training-started" ${s.minutosHechos>0?'open':''}><summary>Si ya empezaste</summary><p class="muted">Los minutos no dicen qué hiciste. Marca lo completado para no repetirlo.</p>
- <label class="check"><input name="calento" type="checkbox" ${s.calento?'checked':''}>Ya elevé temperatura y sigo caliente</label>
- <label><span class="kicker">Cardio ya hecho (min)</span><input name="cardioDone" type="number" inputmode="numeric" min="0" step="1" value="${esc(s.cardioHecho)}"></label>
- ${[['principalHecho','Bloque principal listo'],['complementoHecho','Segundo bloque listo'],['accesorioHecho','Accesorio listo']].map(([k,t])=>`<label class="check"><input type="checkbox" name="${k}" ${s[k]?'checked':''}>${t}</label>`).join('')}</details>
- <button type="submit" class="prim">Adaptar mi sesión</button></form>`;
- if(ready)h+=sesion(trainingPlan(s,D),s.rama);
- if(onHoy&&ready){h+=`<div class="row"><button class="${s.hecho?'on':''}" data-hecho>${s.hecho?'Sesión hecha ✓':'Marcar sesión hecha'}</button></div>`}
- // Conserva acceso al audio incluso al cambiar la elección o sin tiempo restante.
- if(onHoy&&s.hecho)h+=`<h3>Registro para Charles</h3>${recUI('entreno:'+D,'Cuéntale qué hiciste, carga real, cardio, cómo te sentiste y si algo dolió o quedó corto.')}<p class="muted">Queda en este teléfono. Envíamelo en este chat y se lo paso a Charles.</p>`;
- if(!onHoy&&ready)h+='<p class="muted">La misma sesión queda en Hoy; al marcarla hecha aparece tu registro para Charles.</p>';
+function getSesiones(){
+ const s=dia();
+ if(Array.isArray(s.sesiones)&&s.sesiones.length)return s.sesiones.map(x=>trainingChoice({...x,id:x.id||'legacy'}));
+ if(s.rama&&s.minutosTotal!==''&&s.minutosTotal!=null)return [trainingChoice({...s,id:s.id||'legacy'})];
+ return [];
+}
+function trainingPanel(){
+ const s=dia(),sesiones=getSesiones();
+ let h='';
+ if(sesiones.length){
+  h+=`<p class="kicker">Registro de hoy</p><ul class="training-log">${sesiones.map(x=>`<li><strong>${esc(x.rama)}</strong> · ${esc(x.minutosTotal)} min${x.hecho?' · hecha':''}</li>`).join('')}</ul>`;
+ }
+ sesiones.forEach(ses=>{
+  if(!(ses.rama&&ses.minutosTotal!==''))return;
+  h+=sesion(trainingPlan(ses,D),ses.rama);
+  h+=`<div class="row"><button class="${ses.hecho?'on':''}" data-hecho="${esc(ses.id)}">${ses.hecho?'Sesión hecha ✓':'Marcar sesión hecha'}</button></div>`;
+  if(ses.hecho)h+=`<h3>Registro para Charles</h3>${recUI('entreno:'+D+':'+ses.id,'Cuéntale qué hiciste, carga real, cardio, cómo te sentiste y si algo dolió o quedó corto.')}<p class="muted">Queda en este teléfono. Envíamelo en este chat y se lo paso a Charles.</p>`;
+ });
+ h+=`<p class="muted">¿Vas a entrenar?</p><div class="row">${opts(['Sí','No'],s.entrena,'entrena')}</div>`;
+ if(s.entrena==='Sí'){
+  h+=`<form id="training-form" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required><option value="">Elige tu sesión…</option>${TIPOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
+ <label><span class="kicker">Minutos disponibles</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required placeholder="Ej. 40"></label>
+ <button type="submit" class="prim">Armar sesión</button></form>`;
+ }
  return h;
 }
 function sesion(p,tipo){
@@ -154,14 +163,11 @@ function sesion(p,tipo){
  if(p.short)h+='<p class="muted">Tiempo corto: solo preparación / movimiento fácil y salida. Se omiten barra y accesorios, no se aprietan los descansos.</p>';
  if(p.omitted?.length)h+=`<p class="muted">Fuera por tiempo: ${p.omitted.join(', ')}. No se añaden al final.</p>`;
  const cardioMode=tipo==='Hipertrofia'?(p.name==='piernas'?'bicicleta fácil':'remo suave'):tipo==='CrossFit de retorno'?'bicicleta fácil; motor corto sin competir':'marcha / trote conversacional; camina si hace falta';
- const cardioBlock=(n,label)=>n?`<section class="cardio"><h4>${label} · ${n} min</h4><p>${cardioMode}. ${tipo==='Híbrido'||p.run?'Apoyo al 2400 m: construir tolerancia, no correr al ritmo meta.':''}</p><p class="source">${tipo==='Hipertrofia'?'ID47 · cardio redistribuido':tipo==='CrossFit de retorno'?'Semana 10 · motor reducido':'AFMC · base de carrera'}.</p></section>`:'';
- p.blocks.forEach((b,i)=>{h+=`<section class="session-block"><h4>${i+1}. ${b.name} · hasta ${b.minutes} min</h4><p class="source">Base: ${b.source} · ${b.purpose}.</p><ul>${b.items.map(x=>`<li>${x}</li>`).join('')}</ul><p class="muted">Descansa 60–120 s o más. El tiempo incluye descanso y transiciones; si no alcanza, quita una serie, no el descanso.</p></section>`;if(i===0)h+=cardioBlock(p.middle,'Cardio entre bloques')});
- if(!p.blocks.length)h+=cardioBlock(p.middle,'Cardio · tramo central');
- h+=cardioBlock(p.last,tipo==='CrossFit de retorno'?'Motor corto / salida fácil':'Cardio · tramo de salida');
- h+=`<p class="cardio"><b>Cardio distribuido, no extra</b><br>${p.cardioDone} min ya registrados + ${p.cardio} min de cardio pendientes en esta ficha${p.warm&&p.cardio>=p.warm?' (incluye la entrada fácil)':''}. ${p.cardioDone+p.cardio<20?'Se reduce el objetivo de 20 min por el tiempo disponible; no se recupera al final.':'Objetivo de 20 min cubierto; no añadas otros 20.'}${p.warm>Math.min(p.warm,p.cardio)?' La preparación general necesaria supera el saldo de cardio; no se omite para cuadrar la cifra.':''}</p>
- <section class="session-block"><h4>Elongación estática · salida</h4><p>${p.exit?p.exit+' min reservados.':'Sin tiempo reservado: déjala para después, con el cuerpo caliente.'} ${p.preparation.static} Sostén suave 20–30 s por lado, sin rebotes; completa aparte si no cabe. No se hace en frío. Base: HSS.</p></section>
- <p class="muted">Carga: la de hoy, 3–4 repeticiones en reserva. No porcentajes de tus marcas antiguas. ${p.margin?`${p.margin} min quedan como margen: no es obligación llenarlos.`:''} Los accesorios salen primero si falta tiempo. Para si duele la rodilla o la lumbar; ante mareo, dolor de pecho o falta de aire desproporcionada, detén y consulta.</p>`;
- h+=`<details class="training-sources"><summary>2400 m, fuentes y pendientes</summary><p>Prioridad: 2400 m militares. Referencia matemática para 9:30: 3:57,5/km o 1:35/400 m; sub-9:30 exige algo más rápido. <b>No es tu ritmo actual ni el de esta sesión.</b></p><p>Tu Excel ID7 (Sheet1, D48 y D106–109) usa ritmos relativos a 5k/10k. Se recupera esa lógica, no sus 10×1000 m ni el chaleco.</p><p>Pendiente con Charles: marca actual de 2400 m y tolerancia reciente. AFMC construye base varias semanas (2–3 exposiciones de 20 min continuos) antes de intervalos controlables, una vez por semana, con dos días completos de recuperación. Smith fracciona una meta razonable a partir de una marca medida. No sumamos ambos programas ni fijamos series rápidas sin esos datos.</p><p>5k, 10k y 42k siguen pendientes para etapas posteriores, no cuatro planes juntos. Everest, Lace Up / Professor Chaos y Boat Race quedan como referencias de formatos: sus volúmenes completos no se prescriben hoy.</p><p><a href="${FUENTES.afmc}" target="_blank" rel="noopener">AFMC · base e intervalos</a> · <a href="${FUENTES.smith}" target="_blank" rel="noopener">Stew Smith · ritmo relativo</a> · <a href="${FUENTES.hss}" target="_blank" rel="noopener">HSS · preparación</a></p></details></article>`;
+ const cardioBlock=(n,label)=>n?`<section class="cardio"><h4>${label} · ${n} min</h4><p>${cardioMode}. ${tipo==='Híbrido'||p.run?'Apoyo al 2400 m: construir tolerancia, no correr al ritmo meta.':''}</p><p class="source">${tipo==='Hipertrofia'?'ID47 · cardio general':tipo==='CrossFit de retorno'?'Semana 10 · motor reducido':'AFMC · base de carrera'}.</p></section>`:'';
+ p.blocks.forEach((b,i)=>{h+=`<section class="session-block"><h4>${i+1}. ${b.name} · hasta ${b.minutes} min</h4><p class="source">Base: ${b.source} · ${b.purpose}.</p><ul>${b.items.map(x=>`<li>${x}</li>`).join('')}</ul><p class="muted">Descansa 60–120 s o más. El tiempo incluye descanso y transiciones; si no alcanza, quita una serie, no el descanso.</p></section>`});
+ h+=cardioBlock((p.middle||0)+(p.last||0),'Cardio general del entrenamiento');
+ h+=`<section class="session-block"><h4>Elongación estática · salida</h4><p>${p.exit?p.exit+' min reservados.':'Sin tiempo reservado: déjala para después, con el cuerpo caliente.'} ${p.preparation.static} Sostén suave 20–30 s por lado, sin rebotes; completa aparte si no cabe. No se hace en frío. Base: HSS.</p></section>
+ <p class="muted">Carga: la de hoy, 3–4 repeticiones en reserva. No porcentajes de tus marcas antiguas. ${p.margin?`${p.margin} min quedan como margen: no es obligación llenarlos.`:''} Los accesorios salen primero si falta tiempo. Para si duele la rodilla o la lumbar; ante mareo, dolor de pecho o falta de aire desproporcionada, detén y consulta.</p></article>`;
  return h;
 }
 
@@ -207,17 +213,18 @@ function vHoy(){
  <section class="card"><h2>Sensación muscular</h2><div class="row">
  ${[['Verde','g'],['Amarillo','y'],['Rojo','r']].map(([n,c])=>`<button class="${c} ${s.rec===n?'on':''}" data-rec="${n}">${n}</button>`).join('')}</div>
  ${s.rec==='Rojo'?'<p class="muted">Sensación muscular en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
- <section class="card"><h2>Entrenamiento</h2><p class="muted">¿Vas a entrenar?</p><div class="row">${opts(['Sí','No'],s.entrena,'entrena')}</div>`;
- if(s.entrena==='Sí')h+=trainingChooser(true);
- h+=`</section>
+ <section class="card"><h2>Entrenamiento</h2>${trainingPanel()}</section>
  <section class="card"><h2>Macros de hoy</h2>${resumen(D)}
   <h3>Extra de hoy</h3>${pickerHTML('Extras')}${listaHTML(D,'Extras')}</section>
  <section class="card"><h2>Estudio</h2><p>${CALC.t}</p><button data-go="estudiar">Desarrollar</button> ${s.calc?`<span class="muted">· ${s.calc}</span>`:''}</section>
  <section class="card"><h2>Espiritual</h2><p class="verse">«${VERSO.txt}»</p><p class="muted">${VERSO.ref} · ${VERSO.ver}</p><button data-go="espiritual">Grabar mi reflexión</button></section>`;
  return h;
 }
+function menuFoods(){return allFoods().filter(f=>f.charles)}
 function pickerHTML(b){
- return `<div class="row"><select data-sel="${b}"><option value="">Elegir alimento…</option>${allFoods().map(f=>`<option value="${f.id}">${esc(f.n)} — ${esc(f.u)}</option>`).join('')}</select>
+ const list=menuFoods();
+ if(!list.length)return `<p class="muted">Aquí van a aparecer las comidas de tu menú con Charles, no un catálogo general.</p>`;
+ return `<div class="row"><select data-sel="${b}"><option value="">Elegir alimento…</option>${list.map(f=>`<option value="${f.id}">${esc(f.n)} — ${esc(f.u)}</option>`).join('')}</select>
  <input type="number" inputmode="decimal" min="0.25" step="0.25" value="1" data-qty="${b}" style="width:90px" aria-label="porciones"><button class="sm prim" data-add="${b}">Agregar</button></div>`;
 }
 function listaHTML(d,b){
@@ -239,7 +246,7 @@ function vComida(){
  return h;
 }
 function vEntrenar(){
- return `<section class="card"><h2>Tu entrenamiento</h2><p class="accent">Elige lo de hoy, no una planilla completa.</p>${trainingChooser()}</section>`;
+ return `<section class="card"><h2>Tu entrenamiento</h2>${trainingPanel()}</section>`;
 }
 function vEstudiar(){
  const s=dia();
@@ -275,7 +282,10 @@ function render(){
  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
  $('#view').innerHTML={hoy:vHoy,comida:vComida,entrenar:vEntrenar,estudiar:vEstudiar,espiritual:vEspiritual}[tab]();
  if(tab==='espiritual')showAudio(D);
- if(tab==='hoy'&&dia().hecho)showAudio('entreno:'+D);
+ if(tab==='hoy'||tab==='entrenar'){
+  getSesiones().filter(x=>x.hecho).forEach(x=>showAudio('entreno:'+D+':'+x.id));
+  if(dia().hecho)showAudio('entreno:'+D);
+ }
 }
 document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
@@ -284,7 +294,10 @@ document.addEventListener('click',async e=>{
  if(d.animo)return setDia({animo:d.animo});
  if(d.rec)return setDia({rec:d.rec});
  if(d.entrena)return setDia({entrena:d.entrena});
- if('hecho' in d)return setDia({hecho:!dia().hecho});
+ if('hecho' in d){
+  const id=d.hecho,sesiones=getSesiones().map(x=>({...x,hecho:x.id===id?!x.hecho:!!x.hecho}));
+  return setDia({sesiones,hecho:sesiones.some(x=>x.hecho)});
+ }
  if(d.calc)return setDia({calc:d.calc,calcTxt:$('#calcTxt').value});
  if(d.mf!==undefined){const n=+d.mf;save('hoy:menuFecha',n===0?null:addDays(menuTarget(),n));return render()}
  if(d.add){const blk=d.add,id=document.querySelector(`[data-sel="${blk}"]`).value,q=parseFloat(document.querySelector(`[data-qty="${blk}"]`).value)||1;if(!id)return;
@@ -306,10 +319,10 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('submit',e=>{
  if(e.target.id==='training-form'){
-  e.preventDefault();const f=new FormData(e.target),total=Number(f.get('total')),already=Number(f.get('already')),cardio=Number(f.get('cardioDone'));
-  if(!TIPOS.includes(f.get('rama'))||![total,already,cardio].every(n=>Number.isSafeInteger(n)&&n>=0)||cardio>already)return alert('Usa minutos enteros desde cero; el cardio ya hecho no puede superar los minutos ya hechos.');
-  const started=already>0;
-  return setDia({rama:f.get('rama'),minutosTotal:total,minutosHechos:already,cardioHecho:cardio,calento:started&&f.has('calento'),principalHecho:started&&f.has('principalHecho'),complementoHecho:started&&f.has('complementoHecho'),accesorioHecho:started&&f.has('accesorioHecho')});
+  e.preventDefault();const f=new FormData(e.target),total=Number(f.get('total'));
+  if(!TIPOS.includes(f.get('rama'))||!Number.isSafeInteger(total)||total<0)return alert('Elige un tipo y minutos enteros desde cero.');
+  const ses={id:'s'+Date.now(),rama:f.get('rama'),minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
+  return setDia({sesiones:[...getSesiones(),ses],entrena:''});
  }
  if(e.target.id!=='weight-form')return;
  e.preventDefault();
