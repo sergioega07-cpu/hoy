@@ -193,7 +193,25 @@ function resumen(d){
 
 // ---------- Estudio / Espiritual ----------
 const CALC={t:'Deriva f(x) = 3x² · sen(x) y evalúa f′(π/2).',h:'Pista: regla del producto, (uv)′ = u′v + uv′.'};
-const VERSO={ref:'Génesis 1:1',txt:'En el principio crió Dios los cielos y la tierra.',ver:'Reina-Valera 1909 (dominio público)'};
+const BIBLIA_KEY='hoy:biblia';
+function lecturaHoy(){
+ const pos=load(BIBLIA_KEY,null);
+ if(pos&&pos.txt&&pos.ref)return pos;
+ return null;
+}
+function espiritualLectura(s,inTab){
+ const pos=lecturaHoy();
+ let h=`<section class="card"><h2>${inTab?'Lectura seguida':'Espiritual'}</h2>`;
+ if(pos)h+=`<p class="verse">«${esc(pos.txt)}»</p><p class="muted">${esc(pos.ref)} · Reina-Valera 1909 (dominio público)</p>`;
+ else h+='<p class="muted">La lectura es seguida: el versículo del día se busca según por dónde vas, no el primero de Génesis por defecto.</p>';
+ h+=`<p class="kicker">Las 3 páginas</p>
+ <p class="muted">¿Leíste las 3 páginas de la Biblia?</p>
+ <div class="row">${opts(['Sí','No'],s.biblia3,'biblia3')}</div>`;
+ if(s.biblia3==='Sí')h+='<p class="muted">Quedó marcado: leíste las 3 páginas de hoy.</p>';
+ if(!inTab)h+='<p style="margin-top:14px"><button data-go="espiritual">Grabar mi reflexión</button></p>';
+ h+='</section>';
+ return h;
+}
 
 // IndexedDB audios
 const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('hoy',1);r.onupgradeneeded=()=>r.result.createObjectStore('audios');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
@@ -217,7 +235,7 @@ function vHoy(){
  <section class="card"><h2>Macros de hoy</h2>${resumen(D)}
   <h3>Extra de hoy</h3>${pickerHTML('Extras')}${listaHTML(D,'Extras')}</section>
  <section class="card"><h2>Estudio</h2><p>${CALC.t}</p><button data-go="estudiar">Desarrollar</button> ${s.calc?`<span class="muted">· ${s.calc}</span>`:''}</section>
- <section class="card"><h2>Espiritual</h2><p class="verse">«${VERSO.txt}»</p><p class="muted">${VERSO.ref} · ${VERSO.ver}</p><button data-go="espiritual">Grabar mi reflexión</button></section>`;
+ ${espiritualLectura(s,false)}`;
  return h;
 }
 function menuFoods(){return allFoods().filter(f=>f.charles)}
@@ -255,8 +273,8 @@ function vEstudiar(){
  <div class="row" style="margin-top:8px"><button class="${s.calc==='Hecho'?'on':''}" data-calc="Hecho">Hecho</button><button class="${s.calc==='Después'?'on':''}" data-calc="Después">Después</button></div></section>`;
 }
 function vEspiritual(){
- return `<section class="card"><h2>Lectura seguida</h2><p class="verse">«${VERSO.txt}»</p><p class="muted">${VERSO.ref} · ${VERSO.ver}</p>
- <p class="muted">Punto de partida provisorio: más adelante fijamos dónde vas en tu lectura.</p></section>
+ const s=dia();
+ return `${espiritualLectura(s,true)}
  <section class="card"><h2>Tu audio de hoy</h2>
  ${recUI(D,'Qué sientes y cómo razonas este verso.')}</section>`;
 }
@@ -294,6 +312,7 @@ document.addEventListener('click',async e=>{
  if(d.animo)return setDia({animo:d.animo});
  if(d.rec)return setDia({rec:d.rec});
  if(d.entrena)return setDia({entrena:d.entrena});
+ if(d.biblia3)return setDia({biblia3:d.biblia3});
  if('hecho' in d){
   const id=d.hecho,sesiones=getSesiones().map(x=>({...x,hecho:x.id===id?!x.hecho:!!x.hecho}));
   return setDia({sesiones,hecho:sesiones.some(x=>x.hecho)});
