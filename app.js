@@ -132,25 +132,30 @@ function getSesiones(){
  if(s.rama&&s.minutosTotal!==''&&s.minutosTotal!=null)return [trainingChoice({...s,id:s.id||'legacy'})];
  return [];
 }
+function trainingLog(sesiones){
+ if(!sesiones.length)return '';
+ return `<p class="kicker">Registro de hoy</p><ul class="training-log">${sesiones.map(x=>`<li><strong>${esc(x.rama)}</strong> · ${esc(x.minutosTotal)} min${x.hecho?' · hecha':''}</li>`).join('')}</ul>`;
+}
 function trainingPanel(){
  const s=dia(),sesiones=getSesiones();
- let h='';
- if(sesiones.length){
-  h+=`<p class="kicker">Registro de hoy</p><ul class="training-log">${sesiones.map(x=>`<li><strong>${esc(x.rama)}</strong> · ${esc(x.minutosTotal)} min${x.hecho?' · hecha':''}</li>`).join('')}</ul>`;
+ let h=`<p class="muted">¿Vas a entrenar?</p><div class="row">${opts(['Sí','No'],s.entrena,'entrena')}</div>`;
+ if(s.entrena==='Sí'){
+  h+=`<form id="training-form" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required><option value="">Elige tu sesión…</option>${TIPOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
+ <label><span class="kicker">Minutos disponibles</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required placeholder="Ej. 40"></label>
+ <button type="submit" class="prim">Armar sesión</button></form>`;
  }
+ h+=trainingLog(sesiones);
  sesiones.forEach(ses=>{
   if(!(ses.rama&&ses.minutosTotal!==''))return;
   h+=sesion(trainingPlan(ses,D),ses.rama);
   h+=`<div class="row"><button class="${ses.hecho?'on':''}" data-hecho="${esc(ses.id)}">${ses.hecho?'Sesión hecha ✓':'Marcar sesión hecha'}</button></div>`;
   if(ses.hecho)h+=`<h3>Registro para Charles</h3>${recUI('entreno:'+D+':'+ses.id,'Cuéntale qué hiciste, carga real, cardio, cómo te sentiste y si algo dolió o quedó corto.')}<p class="muted">Queda en este teléfono. Envíamelo en este chat y se lo paso a Charles.</p>`;
  });
- h+=`<p class="muted">¿Vas a entrenar?</p><div class="row">${opts(['Sí','No'],s.entrena,'entrena')}</div>`;
- if(s.entrena==='Sí'){
-  h+=`<form id="training-form" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required><option value="">Elige tu sesión…</option>${TIPOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
- <label><span class="kicker">Minutos disponibles</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required placeholder="Ej. 40"></label>
- <button type="submit" class="prim">Armar sesión</button></form>`;
- }
  return h;
+}
+function trainingHoyResumen(){
+ const sesiones=getSesiones();
+ return `${trainingLog(sesiones)}<p class="muted">El entrenamiento se arma en Entrenar, no aquí.</p><button data-go="entrenar">${sesiones.length?'Ver o sumar una sesión':'¿Vas a entrenar?'}</button>`;
 }
 function sesion(p,tipo){
  let h=`<article class="training-session"><p class="kicker">Tu sesión · ${p.remaining} min por hacer</p><h3>${esc(tipo)} · ${p.name}</h3><p class="source">Base: ${p.source}. Selección y dosis reducidas propuestas para volver desde cero; no es la hoja completa.</p>`;
@@ -238,7 +243,7 @@ function vHoy(){
  <section class="card"><h2>Sensación muscular</h2><div class="row">
  ${[['Verde','g'],['Amarillo','y'],['Rojo','r']].map(([n,c])=>`<button class="${c} ${s.rec===n?'on':''}" data-rec="${n}">${n}</button>`).join('')}</div>
  ${s.rec==='Rojo'?'<p class="muted">Sensación muscular en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
- <section class="card"><h2>Entrenamiento</h2>${trainingPanel()}</section>
+ <section class="card"><h2>Entrenamiento</h2>${trainingHoyResumen()}</section>
  <section class="card"><h2>Macros de hoy</h2>${resumen(D)}
   <h3>Extra de hoy</h3>${pickerHTML('Extras')}${listaHTML(D,'Extras')}</section>
  <section class="card"><h2>Estudio</h2><p>${CALC.t}</p><button data-go="estudiar">Desarrollar</button> ${s.calc?`<span class="muted">· ${s.calc}</span>`:''}</section>
