@@ -147,7 +147,6 @@ function fmtSueno(s){
  const h=+s.suenoH,m=s.suenoM===''||s.suenoM==null?0:+s.suenoM;
  return m?`${h} h ${m} min`:`${h} h`;
 }
-function listoParaEntrenar(s){return ['Verde','Amarillo','Rojo'].includes(s.rec)&&hasSueno(s)&&['Bien','Normal','Cansado','Bajo'].includes(s.animo)}
 function hoyEstado(s){
  const parts=[];
  const w=weightRecords()[0];
@@ -155,45 +154,38 @@ function hoyEstado(s){
  if(s.animo)parts.push('ánimo '+s.animo);
  if(hasSueno(s))parts.push(fmtSueno(s)+' de sueño');
  if(s.rec)parts.push('sensación '+s.rec);
- return parts.length?'Desde Hoy: '+parts.join(', ')+'.':'';
+ return parts.length?'Desde Hoy: '+parts.join(', ')+'.':'Hoy todavía no tiene ánimo, sueño o sensación anotados.';
+}
+function hoyEvaluacion(s){
+ let h=`<p class="muted">${esc(hoyEstado(s))}</p>`;
+ if(s.rec==='Rojo')h+='<p class="muted">Sensación en rojo: puedes elegir una opción más liviana. Tú decides.</p>';
+ else if(s.animo==='Cansado'||s.animo==='Bajo')h+=`<p class="muted">Ánimo ${esc(s.animo)}: puedes elegir una sesión más corta. Tú decides.</p>`;
+ return h;
 }
 function suenoForm(s){
  return `<form id="sueno-form" class="training-chooser"><div class="grid2"><label><span class="kicker">Horas dormidas</span><input name="suenoH" type="number" inputmode="numeric" min="0" max="24" step="1" value="${s.suenoH??''}" required placeholder="Ej. 8"></label>
  <label><span class="kicker">Minutos</span><input name="suenoM" type="number" inputmode="numeric" min="0" max="59" step="1" value="${s.suenoM??''}" placeholder="Ej. 12"></label></div>
  <button type="submit" class="prim">Anotar sueño</button></form>`;
 }
-function faltaParaEntrenar(s){
- const falta=[];
- if(!['Bien','Normal','Cansado','Bajo'].includes(s.animo))falta.push('el ánimo');
- if(!hasSueno(s))falta.push('las horas de sueño');
- if(!['Verde','Amarillo','Rojo'].includes(s.rec))falta.push('la sensación muscular');
- return `<p class="muted">El plan se arma con lo que anotaste en Hoy. Falta ${esc(falta.join(', '))}.</p><button data-go="hoy">Ir a Hoy</button>`;
-}
 function trainingPanel(){
  const s=dia(),sesiones=getSesiones();
  let h=`<p class="muted">¿Vas a entrenar?</p><div class="row">${opts(['Sí','No'],s.entrena,'entrena')}</div>`;
  if(s.entrena==='Sí'){
-  if(!listoParaEntrenar(s))h+=faltaParaEntrenar(s);
-  else{
-   const ya=weekMusculos(D);
-   h+=`<p class="muted">${esc(hoyEstado(s))}</p>`;
-   h+=ya.length?`<p class="muted">Esta semana ya anotaste: ${esc(ya.join(', '))}.</p>`:'<p class="muted">Esta semana aún no anotaste un músculo.</p>';
-   h+=`<form id="training-form" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required><option value="">Elige tu sesión…</option>${TIPOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
+  const ya=weekMusculos(D);
+  h+=hoyEvaluacion(s);
+  h+=ya.length?`<p class="muted">Esta semana ya anotaste: ${esc(ya.join(', '))}.</p>`:'<p class="muted">Esta semana aún no anotaste un músculo.</p>';
+  h+=`<form id="training-form" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required><option value="">Elige tu sesión…</option>${TIPOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
  <label id="musculo-field" hidden><span class="kicker">¿Qué músculo vas a entrenar?</span><select name="musculo"><option value="">Elige el músculo…</option>${MUSCULOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
  <label><span class="kicker">Minutos disponibles</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required placeholder="Ej. 40"></label>
  <button type="submit" class="prim">Armar sesión</button></form>`;
-  }
  }else if(s.entrena==='No'){
   h+=`<p class="muted">¿Descanso total o recovery day?</p><div class="row">${opts(['Descanso total','Recovery day'],s.descanso,'descanso')}</div>`;
   if(s.descanso==='Descanso total')h+='<p class="muted">Hoy queda como descanso total: no se arma sesión.</p>';
   if(s.descanso==='Recovery day'){
-   if(!listoParaEntrenar(s))h+=faltaParaEntrenar(s);
-   else{
-    h+=`<p class="muted">${esc(hoyEstado(s))}</p>`;
-    h+=`<form id="recovery-form" class="training-chooser"><label><span class="kicker">Cardio ligero</span><select name="cardio" required><option value="">Elige el cardio…</option>${CARDIO_LIGERO.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
+   h+=hoyEvaluacion(s);
+   h+=`<form id="recovery-form" class="training-chooser"><label><span class="kicker">Cardio ligero</span><select name="cardio" required><option value="">Elige el cardio…</option>${CARDIO_LIGERO.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
  <label><span class="kicker">Minutos disponibles</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required placeholder="Ej. 20"></label>
  <button type="submit" class="prim">Armar recovery</button></form>`;
-   }
   }
  }
  h+=trainingLog(sesiones);
@@ -446,16 +438,14 @@ document.addEventListener('submit',e=>{
   return saveSesiones(sesiones);
  }
  if(e.target.id==='training-form'){
-  e.preventDefault();if(!listoParaEntrenar(dia()))return alert('Anota primero en Hoy tu ánimo, tu sensación muscular y las horas que dormiste.');
-  const f=new FormData(e.target),total=Number(f.get('total')),rama=f.get('rama'),musculo=f.get('musculo');
+  e.preventDefault();const f=new FormData(e.target),total=Number(f.get('total')),rama=f.get('rama'),musculo=f.get('musculo');
   if(!TIPOS.includes(rama)||!Number.isSafeInteger(total)||total<0)return alert('Elige un tipo y minutos enteros desde cero.');
   if(rama==='Hipertrofia'&&!MUSCULOS.includes(musculo))return alert('Elige qué músculo vas a entrenar.');
   const ses={id:'s'+Date.now(),rama,musculo:rama==='Hipertrofia'?musculo:'',minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
   return saveSesiones([...getSesiones(),ses],{entrena:''});
  }
  if(e.target.id==='recovery-form'){
-  e.preventDefault();if(!listoParaEntrenar(dia()))return alert('Anota primero en Hoy tu ánimo, tu sensación muscular y las horas que dormiste.');
-  const f=new FormData(e.target),total=Number(f.get('total')),cardio=f.get('cardio');
+  e.preventDefault();const f=new FormData(e.target),total=Number(f.get('total')),cardio=f.get('cardio');
   if(!CARDIO_LIGERO.includes(cardio)||!Number.isSafeInteger(total)||total<0)return alert('Elige un cardio ligero y minutos enteros desde cero.');
   const ses={id:'s'+Date.now(),rama:'Recovery day',cardioRecovery:cardio,minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
   return saveSesiones([...getSesiones(),ses]);
