@@ -239,11 +239,20 @@ function loggedSinMacros(d){
 function resumen(d){
  const t=totals(d),g=load('hoy:metas',{}),lab={p:'Proteína',c:'Carbos',f:'Grasas',k:'kcal'};
  const conMacros=['p','c','f','k'].some(k=>t[k]>0);
- let h=conMacros?`<div class="macros">${['p','c','f','k'].map(k=>`<div><b>${Math.round(t[k])}</b>${lab[k]}${k!=='k'?' g':''}</div>`).join('')}</div>`:'';
- if(loggedSinMacros(d))h+='<p class="muted">Hay comidas de tu menú anotadas. Los macros no están calculados: Charles no me pasó esos números y no los invento.</p>';
  const set=['p','c','f','k'].filter(k=>g[k]>0);
- if(!set.length)h+=`<p class="muted">Aún no hay metas definidas. Ponlas en Comida → «Tus metas».</p>`;
- else if(conMacros)h+='<ul>'+set.map(k=>{const diff=t[k]-g[k];return `<li>${lab[k]}: ${diff>=0?`<span class="ok">alcanza</span> (+${Math.round(diff)})`:`<span class="falta">falta ${Math.round(-diff)}${k!=='k'?' g':''}</span>`} de ${g[k]}</li>`}).join('')+'</ul>';
+ const caja=vals=>`<div class="macros">${['p','c','f','k'].map(k=>`<div><b>${Math.round(vals[k])}</b>${lab[k]}${k!=='k'?' g':''}</div>`).join('')}</div>`;
+ let h='';
+ if(set.length){
+  h+=`<p class="muted">A consumir hoy</p><div class="macros">${set.map(k=>`<div><b>${g[k]%1?String(g[k]).replace('.',','):g[k]}</b>${lab[k]}${k!=='k'?' g':''}</div>`).join('')}</div>`;
+  if(conMacros){
+   h+='<p class="muted">Consumido hasta ahora</p>'+caja(t);
+   h+='<ul>'+set.map(k=>{const diff=t[k]-g[k];return `<li>${lab[k]}: ${diff>=0?`<span class="ok">alcanza</span> (+${Math.round(diff)})`:`<span class="falta">falta ${Math.round(-diff)}${k!=='k'?' g':''}</span>`} de ${g[k]}</li>`}).join('')+'</ul>';
+  }
+ }else{
+  h+='<p class="muted">Aún no hay un resumen de macros a consumir. Se anotan en Comida → «Tus metas»; no se inventan.</p>';
+  if(conMacros)h+='<p class="muted">Consumido hasta ahora</p>'+caja(t);
+ }
+ if(loggedSinMacros(d))h+='<p class="muted">Hay comidas de tu menú anotadas. Los macros no están calculados: Charles no me pasó esos números y no los invento.</p>';
  return h;
 }
 
@@ -289,8 +298,7 @@ function vHoy(){
  ${[['Verde','g'],['Amarillo','y'],['Rojo','r']].map(([n,c])=>`<button class="${c} ${s.rec===n?'on':''}" data-rec="${n}">${n}</button>`).join('')}</div>
  ${s.rec?'':'<p class="muted">Sin tu sensación muscular no se arma un entrenamiento.</p>'}
  ${s.rec==='Rojo'?'<p class="muted">Sensación muscular en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
- <section class="card"><h2>Macros de hoy</h2>${resumen(D)}
-  <h3>Extra de hoy</h3>${pickerHTML('Extras')}${listaHTML(D,'Extras')}</section>
+ <section class="card"><h2>Macros de hoy</h2>${resumen(D)}</section>
  <section class="card"><h2>Estudio</h2><p>${CALC.t}</p><button data-go="estudiar">Desarrollar</button> ${s.calc?`<span class="muted">· ${s.calc}</span>`:''}</section>
  ${espiritualLectura(s,false)}`;
  return h;
