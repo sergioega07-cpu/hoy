@@ -172,22 +172,29 @@ function sesion(p,tipo){
 }
 
 // ---------- Comida ----------
-let FOODS=[];
+let FOODS=[],CHARLES=[];
 const custom=()=>load('hoy:alimentos',[]);
-const allFoods=()=>[...FOODS,...custom()];
-const macrosOf=(f,q)=>{const r=f.g/100*q;return{p:f.p*r,c:f.c*r,f:f.f*r,k:f.k*r}};
+const allFoods=()=>[...FOODS,...CHARLES,...custom()];
+const hasMacros=f=>!!(f&&Number.isFinite(+f.g)&&+f.g>0&&['p','c','f','k'].every(k=>Number.isFinite(+f[k])));
+const macrosOf=(f,q)=>{if(!hasMacros(f))return null;const r=f.g/100*q;return{p:f.p*r,c:f.c*r,f:f.f*r,k:f.k*r}};
 const COMIDAS=['Desayuno','Almuerzo','Cena','Snacks'];
 function totals(d){
  const m=load(menuKey(d),{}),t={p:0,c:0,f:0,k:0};
- [...COMIDAS,'Extras'].forEach(b=>(m[b]||[]).forEach(it=>{const f=allFoods().find(x=>x.id===it.id);if(f){const x=macrosOf(f,it.q);for(const k in t)t[k]+=x[k]}}));
+ [...COMIDAS,'Extras'].forEach(b=>(m[b]||[]).forEach(it=>{const f=allFoods().find(x=>x.id===it.id);const x=macrosOf(f,it.q);if(x)for(const k in t)t[k]+=x[k]}));
  return t;
+}
+function loggedSinMacros(d){
+ const m=load(menuKey(d),{});
+ return [...COMIDAS,'Extras'].some(b=>(m[b]||[]).some(it=>{const f=allFoods().find(x=>x.id===it.id);return f&&!hasMacros(f)}));
 }
 function resumen(d){
  const t=totals(d),g=load('hoy:metas',{}),lab={p:'Proteína',c:'Carbos',f:'Grasas',k:'kcal'};
- let h=`<div class="macros">${['p','c','f','k'].map(k=>`<div><b>${Math.round(t[k])}</b>${lab[k]}${k!=='k'?' g':''}</div>`).join('')}</div>`;
+ const conMacros=['p','c','f','k'].some(k=>t[k]>0);
+ let h=conMacros?`<div class="macros">${['p','c','f','k'].map(k=>`<div><b>${Math.round(t[k])}</b>${lab[k]}${k!=='k'?' g':''}</div>`).join('')}</div>`:'';
+ if(loggedSinMacros(d))h+='<p class="muted">Hay comidas de tu menú anotadas. Los macros no están calculados: Charles no me pasó esos números y no los invento.</p>';
  const set=['p','c','f','k'].filter(k=>g[k]>0);
  if(!set.length)h+=`<p class="muted">Aún no hay metas definidas. Ponlas en Comida → «Tus metas».</p>`;
- else h+='<ul>'+set.map(k=>{const diff=t[k]-g[k];return `<li>${lab[k]}: ${diff>=0?`<span class="ok">alcanza</span> (+${Math.round(diff)})`:`<span class="falta">falta ${Math.round(-diff)}${k!=='k'?' g':''}</span>`} de ${g[k]}</li>`}).join('')+'</ul>';
+ else if(conMacros)h+='<ul>'+set.map(k=>{const diff=t[k]-g[k];return `<li>${lab[k]}: ${diff>=0?`<span class="ok">alcanza</span> (+${Math.round(diff)})`:`<span class="falta">falta ${Math.round(-diff)}${k!=='k'?' g':''}</span>`} de ${g[k]}</li>`}).join('')+'</ul>';
  return h;
 }
 
@@ -238,16 +245,21 @@ function vHoy(){
  ${espiritualLectura(s,false)}`;
  return h;
 }
-function menuFoods(){return allFoods().filter(f=>f.charles)}
+function menuFoods(b){
+ const list=allFoods().filter(f=>f.charles);
+ if(!b||b==='Extras')return list;
+ return list.filter(f=>Array.isArray(f.slots)&&f.slots.includes(b));
+}
 function pickerHTML(b){
- const list=menuFoods();
+ const list=menuFoods(b);
  if(!list.length)return `<p class="muted">Aquí van a aparecer las comidas de tu menú con Charles, no un catálogo general.</p>`;
  return `<div class="row"><select data-sel="${b}"><option value="">Elegir alimento…</option>${list.map(f=>`<option value="${f.id}">${esc(f.n)} — ${esc(f.u)}</option>`).join('')}</select>
  <input type="number" inputmode="decimal" min="0.25" step="0.25" value="1" data-qty="${b}" style="width:90px" aria-label="porciones"><button class="sm prim" data-add="${b}">Agregar</button></div>`;
 }
 function listaHTML(d,b){
  const m=load(menuKey(d),{});return (m[b]||[]).map((it,i)=>{const f=allFoods().find(x=>x.id===it.id);if(!f)return '';const x=macrosOf(f,it.q);
-  return `<div class="item"><span>${it.q}× ${esc(f.n)}<br><span class="muted">P ${x.p.toFixed(1)} · C ${x.c.toFixed(1)} · G ${x.f.toFixed(1)} · ${Math.round(x.k)} kcal</span></span><button class="sm" data-del="${b}:${i}">✕</button></div>`}).join('');
+  const extra=[f.u,f.nota,x?`P ${x.p.toFixed(1)} · C ${x.c.toFixed(1)} · G ${x.f.toFixed(1)} · ${Math.round(x.k)} kcal`:''].filter(Boolean).join(' · ');
+  return `<div class="item"><span>${it.q}× ${esc(f.n)}<br><span class="muted">${esc(extra)}</span></span><button class="sm" data-del="${b}:${i}">✕</button></div>`}).join('');
 }
 function menuTarget(){return load('hoy:menuFecha',null)||addDays(D,1)}
 function vComida(){
@@ -260,7 +272,7 @@ function vComida(){
  ${[['p','Proteína (g)'],['c','Carbos (g)'],['f','Grasas (g)'],['k','kcal (opcional)']].map(([k,l])=>`<label>${l}<input type="number" inputmode="decimal" data-meta="${k}" value="${g[k]??''}" placeholder="tu meta"></label>`).join('')}</div></section>
  <section class="card"><h2>Crear alimento propio</h2><p class="muted">Valores por porción, escritos por ti.</p>
  <input id="cn" placeholder="Nombre (ej. queque de la casa)"><div class="grid2" style="margin-top:8px"><input id="cu" placeholder="Porción (ej. 1 trozo)"><input id="ck" type="number" inputmode="decimal" placeholder="kcal"><input id="cp" type="number" inputmode="decimal" placeholder="Proteína g"><input id="cc" type="number" inputmode="decimal" placeholder="Carbos g"><input id="cf" type="number" inputmode="decimal" placeholder="Grasas g"><button class="prim" data-crear>Guardar</button></div></section>
- <p class="muted">Macros del catálogo: USDA FoodData Central (SR Legacy). Porciones aproximadas.</p>`;
+ <p class="muted">Opciones de tu menú con Charles. Los macros de cada plato se suman cuando él los tenga; no se inventan.</p>`;
  return h;
 }
 function vEntrenar(){
@@ -354,6 +366,9 @@ document.addEventListener('submit',e=>{
 });
 document.addEventListener('change',e=>{const k=e.target.dataset.meta;if(k){const g=load('hoy:metas',{});const v=parseFloat(e.target.value);if(v>0)g[k]=v;else delete g[k];save('hoy:metas',g);render()}});
 document.addEventListener('input',e=>{if(e.target.id==='calcTxt')save(dayKey(D),{...dia(),calcTxt:e.target.value})});
-fetch('./foods.json').then(r=>r.json()).then(f=>{FOODS=f;render()}).catch(()=>render());
+Promise.all([
+ fetch('./foods.json').then(r=>r.ok?r.json():[]).catch(()=>[]),
+ fetch('./charles-menu.json').then(r=>r.ok?r.json():[]).catch(()=>[])
+]).then(([usda,menu])=>{FOODS=usda;CHARLES=Array.isArray(menu)?menu:[];render()}).catch(()=>render());
 render();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');

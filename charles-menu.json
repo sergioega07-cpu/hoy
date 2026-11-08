@@ -1,0 +1,38 @@
+[
+  {
+    "id": "ch-tortilla-l",
+    "n": "Tortilla L con 3 huevos y 30 g queso chanco casero",
+    "u": "1 tortilla",
+    "slots": ["Desayuno"],
+    "charles": true
+  },
+  {
+    "id": "ch-plato-carne-carbo-veg",
+    "n": "Carne cocida, carbohidrato y vegetales",
+    "u": "100–120 g de carne cocida + 190 g de carbohidrato + vegetales",
+    "nota": "Pendiente: si los 190 g de carbohidrato son cocidos o crudos",
+    "slots": ["Almuerzo", "Cena"],
+    "charles": true
+  },
+  {
+    "id": "ch-pannacotta",
+    "n": "Panna cotta o gelatina proteica (media mañana)",
+    "u": "20 g gelatina bovina + 200 ml leche proteica + 150 g yogur + 1 scoop Grizzly",
+    "slots": ["Snacks"],
+    "charles": true
+  },
+  {
+    "id": "ch-banana-bread",
+    "n": "Banana bread proteico (media tarde)",
+    "u": "¼ del pan (4 porciones grandes; a veces se comparte en medias porciones)",
+    "slots": ["Snacks"],
+    "charles": true
+  },
+  {
+    "id": "ch-tostadas-francesas",
+    "n": "Tostadas francesas (media tarde)",
+    "u": "2 panes de proteína + 50 ml leche + 2 huevos",
+    "slots": ["Snacks"],
+    "charles": true
+  }
+]
