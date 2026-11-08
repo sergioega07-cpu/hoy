@@ -143,6 +143,10 @@ function trainingPanel(){
   h+=`<form id="training-form" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required><option value="">Elige tu sesión…</option>${TIPOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
  <label><span class="kicker">Minutos disponibles</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required placeholder="Ej. 40"></label>
  <button type="submit" class="prim">Armar sesión</button></form>`;
+ }else if(s.entrena==='No'){
+  h+=`<p class="muted">¿Cómo es el día?</p><div class="row">${opts(['Descanso total','Entrenamiento ligero'],s.descanso,'descanso')}</div>`;
+  if(s.descanso==='Descanso total')h+='<p class="muted">Hoy queda como descanso total: no se arma sesión.</p>';
+  if(s.descanso==='Entrenamiento ligero')h+='<p class="muted">Hoy queda como entrenamiento ligero. Si más tarde quieres moverte, puedes cambiar a Sí y armar una sesión corta.</p>';
  }
  h+=trainingLog(sesiones);
  sesiones.forEach(ses=>{
@@ -154,8 +158,11 @@ function trainingPanel(){
  return h;
 }
 function trainingHoyResumen(){
- const sesiones=getSesiones();
- return `${trainingLog(sesiones)}<p class="muted">El entrenamiento se arma en Entrenar, no aquí.</p><button data-go="entrenar">${sesiones.length?'Ver o sumar una sesión':'¿Vas a entrenar?'}</button>`;
+ const s=dia(),sesiones=getSesiones();
+ let h=trainingLog(sesiones);
+ if(s.entrena==='No'&&s.descanso)h+=`<p class="muted">${esc(s.descanso)}.</p>`;
+ h+=`<p class="muted">El entrenamiento se arma en Entrenar, no aquí.</p><button data-go="entrenar">${sesiones.length?'Ver o sumar una sesión':'¿Vas a entrenar?'}</button>`;
+ return h;
 }
 function sesion(p,tipo){
  let h=`<article class="training-session"><p class="kicker">Tu sesión · ${p.remaining} min por hacer</p><h3>${esc(tipo)} · ${p.name}</h3><p class="source">Base: ${p.source}. Selección y dosis reducidas propuestas para volver desde cero; no es la hoja completa.</p>`;
@@ -328,7 +335,8 @@ document.addEventListener('click',async e=>{
  if(d.go){tab=d.go;render();scrollTo(0,0);return}
  if(d.animo)return setDia({animo:d.animo});
  if(d.rec)return setDia({rec:d.rec});
- if(d.entrena)return setDia({entrena:d.entrena});
+ if(d.entrena)return setDia({entrena:d.entrena,descanso:d.entrena==='Sí'?'':dia().descanso});
+ if(d.descanso)return setDia({descanso:d.descanso});
  if(d.biblia3)return setDia({biblia3:d.biblia3});
  if('hecho' in d){
   const id=d.hecho,sesiones=getSesiones().map(x=>({...x,hecho:x.id===id?!x.hecho:!!x.hecho}));
