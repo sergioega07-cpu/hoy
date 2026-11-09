@@ -30,7 +30,20 @@ body {
     linear-gradient(180deg,#080605 0%,#0C0806 30%,#070A08 60%,#080605 100%) !important;
   background-attachment:fixed !important;
 }
-.page, .page-content, .view, .views, #app { background:transparent !important; }
+.view, .views, #app, .page-content { background:transparent !important; }
+/* Cada página lleva su propio fondo opaco: Framework7 deja la página anterior debajo durante y después de navegar,
+   y con fondo transparente se veían encimadas (p. ej. Resumen sobre el Diario, Objetivos sobre su editor). */
+.page {
+  background:
+    radial-gradient(ellipse 70vw 50vh at 10% 8%,rgba(74,40,27,.42),transparent 70%),
+    radial-gradient(ellipse 70vw 60vh at 88% 30%,rgba(29,39,32,.8),transparent 70%),
+    radial-gradient(ellipse 60vw 50vh at 14% 70%,rgba(29,39,32,.8),transparent 70%),
+    radial-gradient(ellipse 60vw 50vh at 85% 95%,rgba(74,40,27,.42),transparent 70%),
+    linear-gradient(180deg,#080605 0%,#0C0806 30%,#070A08 60%,#080605 100%), #080605 !important;
+}
+/* Resumen (gráfico de torta): tamaño de teléfono, como en Waistline, también en pantallas anchas o bajas */
+.page[data-name="diary-chart"] .page-content > div:first-child { width:min(360px, 100%); margin:0 auto; }
+.page[data-name="diary-chart"] .page-content > div { max-width:480px; margin-left:auto; margin-right:auto; }
 #app-panel { background:#0c0806 !important; }
 .navbar .title, .block-title, .card-header, .list .list-group-title, .popup .title, .dialog-title, .login-screen-title {
   font-family:"Cinzel","Times New Roman",serif !important; color:#beac8a !important; letter-spacing:.04em;
@@ -47,3 +60,4 @@ body[class*="color-theme-"], body[class*="color-theme-"] * {
 .list .list-group-title, .list-group-title, .block-title-medium { background:rgba(8,6,5,.55) !important; color:#beac8a !important; }
 .subnavbar { background:rgba(8,6,5,.72) !important; }
 .toolbar-bottom, .toolbar { background:rgba(8,6,5,.72) !important; }
+@media (max-height: 520px) { .page[data-name="diary-chart"] .page-content > div:first-child { padding-top:8px !important; width:min(300px, 100%); } }

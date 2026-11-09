@@ -30,6 +30,8 @@ window.TTS = {
     s.appearance["start-page"] = "/diary/";
     s.diary["meal-names"] = ["Desayuno", "Almuerzo", "Cena", "Snacks", "", "", ""];
     s.integration.usda = true;
+    s.integration["search-language"] = "es";
+    s.integration["search-country"] = "Chile";
     s.integration["usda-key"] = "DEMO_KEY"; // clave pública de demostración de api.data.gov
     // Metas: solo las que Sergio escribió en Templo (hoy:metas); nada inventado
     const m = load("hoy:metas", {});
@@ -42,6 +44,19 @@ window.TTS = {
     s.goals.kilojoules["goal-list"] = [{ "shared-goal": true, goal: ["", "", "", "", "", "", ""] }];
     localStorage.setItem("settings", JSON.stringify(s));
     settings = s; // variable global que index.js ya leyó antes de esta configuración
+  }
+
+  // Configuraciones ya creadas: Open Food Facts en español y Chile (solo si seguían en los valores por defecto)
+  function offEnEspanol() {
+    if (localStorage.getItem("hoy:offChile")) return;
+    const s = load("settings", null);
+    if (s && s.integration) {
+      if (!s.integration["search-language"] || s.integration["search-language"] === "Default") s.integration["search-language"] = "es";
+      if (!s.integration["search-country"] || s.integration["search-country"] === "All") s.integration["search-country"] = "Chile";
+      localStorage.setItem("settings", JSON.stringify(s));
+      settings = s;
+    }
+    localStorage.setItem("hoy:offChile", "1");
   }
 
   const req = r => new Promise((ok, ko) => { r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error) });
@@ -85,7 +100,7 @@ window.TTS = {
   }
 
   window.addEventListener("load", async () => {
-    try { primeraConfig(); } catch (e) { console.log("config", e); }
+    try { primeraConfig(); offEnEspanol(); } catch (e) { console.log("config", e); }
     try { await dbHandler.initializeDb(); await migrarTemplo(); } catch (e) { console.log("migración", e); }
     document.dispatchEvent(new Event("deviceready"));
   });

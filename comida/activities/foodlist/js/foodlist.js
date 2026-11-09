@@ -156,11 +156,12 @@ app.Foodlist = {
 
     let result = [];
 
-    if (usdaList !== undefined)
-      result = result.concat(usdaList);
-
+    // Templo: Open Food Facts primero; USDA queda como opción secundaria al final
     if (offList !== undefined)
       result = result.concat(offList);
+
+    if (usdaList !== undefined)
+      result = result.concat(usdaList);
 
     app.f7.preloader.hide();
 

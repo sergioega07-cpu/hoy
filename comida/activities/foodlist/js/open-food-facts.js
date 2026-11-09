@@ -55,13 +55,14 @@ app.OpenFoodFacts = {
       else
         language = app.getLanguage(app.Settings.get("appearance", "locale")).substring(0, 2);
 
-      let response = await app.Utils.timeoutFetch(url, {
-        headers: {
-          "User-Agent": "Waistline - Android - Version " + app.version + " - https://github.com/davidhealey/waistline"
-        }
-      }, 30000).catch((err) => {
-        resolve(undefined);
-      });
+      // Templo: en la web el servidor de búsqueda de Open Food Facts a veces responde 503 (sin CORS);
+      // se reintenta hasta 2 veces antes de rendirse. El navegador no permite cambiar el User-Agent.
+      let response;
+      for (let intento = 0; intento < 3; intento++) {
+        if (intento > 0) await new Promise((r) => setTimeout(r, 1500 * intento));
+        response = await app.Utils.timeoutFetch(url, {}, 30000).catch((err) => undefined);
+        if (response && response.ok) break;
+      }
 
       if (response && response.ok) {
         let data = await response.json();

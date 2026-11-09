@@ -652,6 +652,9 @@ function vHoy(){
  ${espiritualLectura(s,false)}`;
  return h;
 }
+// En pantallas bajas (p. ej. iPhone horizontal) Comida usa también el alto del encabezado
+function comidaAltura(){const r=document.documentElement.style,bajo=innerHeight<520;r.setProperty('--top-h',(bajo?0:$('.top').getBoundingClientRect().bottom)+'px');r.setProperty('--tabs-h',$('.tabs').offsetHeight+'px')}
+addEventListener('resize',()=>{if(tab==='comida')comidaAltura()});
 function vComida(){
  return `<iframe class="comida-frame" src="./comida/index.html" title="Comida (Waistline)"></iframe>`;
 }
@@ -697,7 +700,7 @@ function render(){
  $('#view').innerHTML={hoy:vHoy,comida:vComida,entrenar:vEntrenar,estudiar:vEstudiar,espiritual:vEspiritual}[tab]();
  if(tab==='espiritual')showAudio(D);
  if(tab==='hoy')fillMacrosHoy();
- if(tab==='comida'){const r=document.documentElement.style;r.setProperty('--top-h',$('.top').getBoundingClientRect().bottom+'px');r.setProperty('--tabs-h',$('.tabs').offsetHeight+'px')}
+ if(tab==='comida')comidaAltura();
  if(tab==='hoy'||tab==='entrenar'){
   getSesiones().filter(x=>x.hecho).forEach(x=>showAudio('entreno:'+D+':'+x.id));
   if(dia().hecho)showAudio('entreno:'+D);
