@@ -14,7 +14,17 @@
   - `comida/activities/foodlist/js/foodlist.js`: resultados de Open Food Facts primero y USDA después.
   - `comida/activities/foodlist/js/open-food-facts.js`: búsqueda sin cabecera User-Agent (no se puede en la web) y con 2 reintentos.
   - Se quitaron archivos que no se usan (fuentes de Framework7, idiomas distintos de español e inglés, tests).
+
+- **`gimnasio/`** es [openGym](https://github.com/DuarteSantos8/openGym) (Copyright Duarte Santos y colaboradores),
+  build demo (`VITE_DEMO=1`, `VITE_TEMPLO=1`) del frontend, bajo la **GNU Affero General Public License v3.0 o posterior**
+  (texto en [`gimnasio/LICENSE-AGPL-3.0.txt`](gimnasio/LICENSE-AGPL-3.0.txt)).
+  **Compatibilidad con GPL-3.0:** la sección 13 de AGPL-3.0 y de GPL-3.0 permite combinar ambas en un solo
+  trabajo; la parte openGym sigue bajo AGPL-3.0 (incluye la obligación de ofrecer el código fuente a quien
+  interactúa por red) y el resto de Templo bajo GPL-3.0. El repo público cumple la oferta de fuente.
+  Cambios Templo: `temploSeed.js` (rutinas/migración), `templo-theme.css` (letras/colores/fondos), media
+  selectiva de ejercicios de Sergio (ver `gimnasio/exercise-media/NOTICE.md`).
 - Framework7 (MIT), Font Awesome y Material Icons conservan sus licencias en sus carpetas.
-- Como Templo incluye y usa ese código, Templo en su conjunto se distribuye bajo **GPL-3.0 o posterior**.
+- Como Templo incluye Waistline (GPL-3.0) y openGym (AGPL-3.0), el conjunto se distribuye de forma compatible:
+  openGym/`gimnasio/` bajo **AGPL-3.0-or-later**; el resto bajo **GPL-3.0 o posterior**, per §13.
   El código fuente completo es este repositorio público.
 - Datos de alimentos: Open Food Facts (ODbL) y USDA FoodData Central (dominio público), consultados en vivo.

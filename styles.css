@@ -149,3 +149,6 @@ summary{cursor:pointer;color:var(--sand-hi);font-size:.88rem}
 .meta-fila{margin:10px 0 12px}.meta-top{display:flex;justify-content:space-between;font-size:.92rem}.meta-top span:last-child{color:var(--sand-hi)}
 .meta-barra{height:6px;border-radius:3px;background:rgba(190,172,138,.18);overflow:hidden;margin:5px 0 2px}.meta-barra span{display:block;height:100%;background:var(--sand);border-radius:3px}
 .meta-fila p{margin:0;font-family:var(--f-accent);font-style:italic}
+
+/* Gimnasio: openGym en ./gimnasio/ (mismo encaje que Comida/Waistline) */
+.gimnasio-frame{position:fixed;left:0;right:0;top:var(--top-h,140px);width:100%;height:calc(100vh - var(--top-h,140px) - var(--tabs-h,64px));height:calc(100dvh - var(--top-h,140px) - var(--tabs-h,64px));border:0;z-index:4;background:transparent}

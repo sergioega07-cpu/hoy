@@ -1,0 +1,28 @@
+/* Templo × openGym: solo letras, colores y fondos (jinseixjj dorado). AGPL-3.0 openGym + GPL-3.0 Templo. */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&display=swap');
+
+:root, :root[data-theme="dark"] {
+  --bg: #080605 !important;
+  --card: #14100c !important;
+  --sand: #beac8a !important;
+  --sand-hi: #d8c8a6 !important;
+  --text: #f2e8d5 !important;
+  --muted: #a89878 !important;
+  --acc: #beac8a !important;
+  --acc-2: #9a8866 !important;
+  --on-acc: #080605 !important;
+  --acc-ink: #d8c8a6 !important;
+  --green: #beac8a;
+  --yellow: #d8c8a6;
+}
+html, body {
+  background: #080605 !important;
+  color: #f2e8d5 !important;
+  font-family: Inter, system-ui, sans-serif !important;
+}
+h1, h2, h3, .brand, [class*="title"] {
+  font-family: Cinzel, "Times New Roman", serif !important;
+  color: #beac8a !important;
+  letter-spacing: .04em;
+}
+.muted, .sub, small { color: #a89878 !important; font-family: "Cormorant Garamond", Georgia, serif; }

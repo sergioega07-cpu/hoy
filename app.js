@@ -41,8 +41,9 @@ function weightCard(){
  <p class="muted">Datos guardados solo en este navegador.</p></section>`;
 }
 
-// ---------- Entrenamiento: elección libre; sin listados inventados ----------
-const TIPOS=['Hipertrofia','CrossFit','Trote','Híbrido'];
+// ---------- Entrenamiento: CrossFit / Trote / Híbrido (hipertrofia → pestaña Gimnasio) ----------
+const TIPOS=['CrossFit','Trote','Híbrido'];
+// MUSCULOS + hipertrofiaBlocks se conservan: historial hoy:* y seed de openGym (gimnasio-src/temploSeed.js)
 const MUSCULOS=['Pecho','Espalda','Piernas','Hombros','Brazos','Core'];
 const DISTANCIAS=['2.400 m','5.000 m','10.000 m','21.000 m','42.000 m'];
 const CARDIO_LIGERO=['Bicicleta fácil','Remo suave','Marcha o trote conversacional','Escalera'];
@@ -50,7 +51,7 @@ const FUENTES={hss:'https://www.hss.edu/health-library/move-better/static-dynami
 function trainingChoice(s){
  const raw=s.rama;
  const legacy={Mixto:'Híbrido','Trote / 2400 m':'Trote',Acondicionamiento:'Híbrido',Calistenia:'CrossFit','CrossFit de retorno':'CrossFit'};
- const rama=TIPOS.includes(s.rama)||s.rama==='Recovery day'?s.rama:(legacy[s.rama]||'');
+ const rama=TIPOS.includes(s.rama)||s.rama==='Recovery day'||s.rama==='Hipertrofia'?s.rama:(legacy[s.rama]||'');
  const distancia=s.distancia||(rama==='Trote'&&raw==='Trote / 2400 m'?'2.400 m':'');
  return {...s,rama,musculo:s.musculo||'',distancia,pista400:s.pista400||'',vueltas400:s.vueltas400??'',tiempo400:s.tiempo400||'',minutosTotal:s.minutosTotal??'',minutosHechos:s.minutosHechos??0,cardioHecho:s.cardioHecho??0};
 }
@@ -205,6 +206,7 @@ function bitacoraForm(ses,blocks){
 }
 function bloque(name,source,purpose,items,min,max){return {name,source,purpose,items,min,max}}
 function hipertrofiaBlocks(musculo){
+ // Conservado como dato de Sergio (seed Gimnasio / historial); Entrenar ya no crea hipertrofia.
  const src='Tu hipertrofia · '+musculo,rir='; carga de hoy, 3–4 repeticiones en reserva';
  const s=(name,purpose,items,min,max)=>bloque(name,src,purpose,items,min,max);
  if(musculo==='Piernas')return [
@@ -398,8 +400,9 @@ function sesionEditForm(x){
  <label><span class="kicker">Minutos</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required value="${esc(x.minutosTotal)}"></label>
  <div class="row"><button type="submit" class="prim">Guardar</button><button type="button" data-edit-cancel>Cancelar</button></div></form>`;
  }
- return `<form id="sesion-edit-form" data-edit-id="${esc(x.id)}" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required>${TIPOS.map(t=>`<option${t===x.rama?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
- <label id="musculo-field-edit"${x.rama==='Hipertrofia'?'':' hidden'}><span class="kicker">¿Qué músculo vas a entrenar?</span><select name="musculo"${x.rama==='Hipertrofia'?' required':''}><option value="">Elige el músculo…</option>${MUSCULOS.map(t=>`<option${t===x.musculo?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
+ const tiposEdit=x.rama==='Hipertrofia'?['Hipertrofia',...TIPOS]:TIPOS;
+ return `<form id="sesion-edit-form" data-edit-id="${esc(x.id)}" class="training-chooser">${x.rama==='Hipertrofia'?'<p class="muted">Hipertrofia nueva: usa Gimnasio. Aquí puedes cambiar el tipo o borrar la sesión.</p>':''}<label><span class="kicker">Tipo</span><select name="rama" required>${tiposEdit.map(t=>`<option${t===x.rama?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
+ <label id="musculo-field-edit" hidden><span class="kicker">¿Qué músculo vas a entrenar?</span><select name="musculo"><option value="">Elige el músculo…</option>${MUSCULOS.map(t=>`<option${t===x.musculo?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
  ${distanciaField(x,true)}${pistaFields(x,true)}
  <label><span class="kicker">Minutos</span><input name="total" type="number" inputmode="numeric" min="0" step="1" required value="${esc(x.minutosTotal)}"></label>
  <div class="row"><button type="submit" class="prim">Guardar</button><button type="button" data-edit-cancel>Cancelar</button></div></form>`;
@@ -444,6 +447,7 @@ function trainingPanel(){
  const s=dia(),sesiones=getSesiones();
  let h=`<p class="muted">¿Vas a entrenar?</p><div class="row">${opts(['Sí','No'],s.entrena,'entrena')}</div>`;
  h+=weekVista(D);
+ h+='<p class="muted">Hipertrofia y bitácora de kilos: pestaña <button type="button" data-go="gimnasio">Gimnasio</button>.</p>';
  if(s.entrena==='Sí'){
   h+=hoyEvaluacion(s);
   h+=ultimaSesionResumen(D);
@@ -465,6 +469,14 @@ function trainingPanel(){
  h+=trainingLog(sesiones);
  sesiones.forEach(ses=>{
   if(!(ses.rama&&ses.minutosTotal!==''))return;
+  // Hipertrofia hecha a mano: sin plan de ejercicios aquí; datos hoy:* intactos para Gimnasio
+  if(ses.rama==='Hipertrofia'){
+   h+=`<article class="training-session"><p class="kicker">Sesión antigua</p><h3>${esc(sesionTitulo(ses))} · ${esc(ses.minutosTotal)} min</h3>
+ <p class="muted">La hipertrofia se registra en <button type="button" data-go="gimnasio">Gimnasio</button>. Esta entrada queda en el día (localStorage) y se migra al historial de openGym.</p></article>`;
+   h+=`<div class="row"><button class="${ses.hecho?'on':''}" data-hecho="${esc(ses.id)}">${ses.hecho?'Sesión hecha ✓':'Marcar sesión hecha'}</button></div>`;
+   if(ses.hecho)h+=`<h3>Registro para Charles</h3>${recUI('entreno:'+D+':'+ses.id,'Cuéntale qué hiciste, carga real, cardio, cómo te sentiste y si algo dolió o quedó corto.')}<p class="muted">Queda en este teléfono. Envíamelo en este chat y se lo paso a Charles.</p>`;
+   return;
+  }
   h+=sesion(trainingPlan(ses,D),ses);
   h+=`<div class="row"><button class="${ses.hecho?'on':''}" data-hecho="${esc(ses.id)}">${ses.hecho?'Sesión hecha ✓':'Marcar sesión hecha'}</button></div>`;
   if(ses.hecho)h+=`<h3>Registro para Charles</h3>${recUI('entreno:'+D+':'+ses.id,'Cuéntale qué hiciste, carga real, cardio, cómo te sentiste y si algo dolió o quedó corto.')}<p class="muted">Queda en este teléfono. Envíamelo en este chat y se lo paso a Charles.</p>`;
@@ -481,13 +493,14 @@ function sessionFill(s){
  return {fillMin:overhead+extraCardio+sumMin,fillMax:overhead+extraCardio+sumMax};
 }
 function sessionAviso(ses){
- if(!['Hipertrofia','CrossFit','Híbrido'].includes(ses.rama))return '';
+ if(ses.rama==='Hipertrofia')return '<p class="muted">La hipertrofia y las cargas están en la pestaña Gimnasio.</p>';
+ if(!['CrossFit','Híbrido'].includes(ses.rama))return '';
  const total=Number(ses.minutosTotal),{fillMin,fillMax}=sessionFill(ses);
  if(!Number.isFinite(total)||!fillMax)return '';
  const nombre=sesionTitulo(ses);
  const rango=`unos ${fillMin} a ${fillMax} minutos, con preparación y los 20 de cardio`;
  if(total>fillMax+10){
-  const otros={'Hipertrofia':'Híbrido, CrossFit','CrossFit':'Hipertrofia, Híbrido','Híbrido':'Hipertrofia, CrossFit'}[ses.rama];
+  const otros={'CrossFit':'Híbrido','Híbrido':'CrossFit'}[ses.rama];
   return `<p class="muted">Con ${total} minutos te sobra tiempo para ${esc(nombre)}. Ese trabajo cabe en ${rango}. Te recomiendo ${otros}, o añadir otra sesión para usar el resto; no lo dejo que lo adivines.</p>`;
  }
  if(total<fillMin){
@@ -651,6 +664,11 @@ addEventListener('resize',()=>{if(tab==='comida')comidaAltura()});
 function vComida(){
  return `<iframe class="comida-frame" src="./comida/index.html" title="Comida (Waistline)"></iframe>`;
 }
+function gimnasioAltura(){const r=document.documentElement.style,bajo=innerHeight<520;r.setProperty('--top-h',(bajo?0:$('.top').getBoundingClientRect().bottom)+'px');r.setProperty('--tabs-h',$('.tabs').offsetHeight+'px')}
+addEventListener('resize',()=>{if(tab==='gimnasio')gimnasioAltura()});
+function vGimnasio(){
+ return `<iframe class="gimnasio-frame" src="./gimnasio/index.html" title="Gimnasio (openGym)"></iframe>`;
+}
 function vEntrenar(){
  return `<section class="card"><h2>Tu entrenamiento</h2>${trainingPanel()}</section>`;
 }
@@ -692,8 +710,9 @@ function render(){
  // Comida pausada (2026-11-09): carpeta ./comida/ y datos se conservan; sin pestaña ni Macros de hoy
  if(tab==='comida')tab='hoy';
  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
- const vistas={hoy:vHoy,entrenar:vEntrenar,estudiar:vEstudiar,espiritual:vEspiritual};
+ const vistas={hoy:vHoy,gimnasio:vGimnasio,entrenar:vEntrenar,estudiar:vEstudiar,espiritual:vEspiritual};
  $('#view').innerHTML=(vistas[tab]||vHoy)();
+ if(tab==='gimnasio')gimnasioAltura();
  if(tab==='espiritual')showAudio(D);
  if(tab==='hoy'||tab==='entrenar'){
   getSesiones().filter(x=>x.hecho).forEach(x=>showAudio('entreno:'+D+':'+x.id));
@@ -784,11 +803,12 @@ document.addEventListener('submit',e=>{
    sesiones[i]={...prev,cardioRecovery:cardio,minutosTotal:total};
   }else{
    const rama=f.get('rama'),musculo=f.get('musculo');
-   if(!TIPOS.includes(rama)||!Number.isSafeInteger(total)||total<0)return alert('Elige un tipo y minutos enteros desde cero.');
-   if(rama==='Hipertrofia'&&!MUSCULOS.includes(musculo))return alert('Elige qué músculo vas a entrenar.');
+   const hipLegacy=rama==='Hipertrofia'&&prev.rama==='Hipertrofia';
+   if((!TIPOS.includes(rama)&&!hipLegacy)||!Number.isSafeInteger(total)||total<0)return alert('Elige un tipo y minutos enteros desde cero.');
+   if(rama==='Hipertrofia'&&!hipLegacy)return alert('La hipertrofia está en la pestaña Gimnasio.');
    if(rama==='Trote'){const err=validTrote(f);if(err)return alert(err);}
    const extras=rama==='Trote'?readTroteFields(f):{distancia:'',pista400:'',vueltas400:'',tiempo400:''};
-   sesiones[i]={...prev,rama,musculo:rama==='Hipertrofia'?musculo:'',...extras,cardioRecovery:'',minutosTotal:total};
+   sesiones[i]={...prev,rama,musculo:rama==='Hipertrofia'?(prev.musculo||musculo||''):'',...extras,cardioRecovery:'',minutosTotal:total};
   }
   editSesionId=null;
   return saveSesiones(sesiones);
@@ -796,10 +816,10 @@ document.addEventListener('submit',e=>{
  if(e.target.id==='training-form'){
   e.preventDefault();const f=new FormData(e.target),total=Number(f.get('total')),rama=f.get('rama'),musculo=f.get('musculo');
   if(!TIPOS.includes(rama)||!Number.isSafeInteger(total)||total<0)return alert('Elige un tipo y minutos enteros desde cero.');
-  if(rama==='Hipertrofia'&&!MUSCULOS.includes(musculo))return alert('Elige qué músculo vas a entrenar.');
+  if(rama==='Hipertrofia')return alert('La hipertrofia está en la pestaña Gimnasio.');
   if(rama==='Trote'){const err=validTrote(f);if(err)return alert(err);}
   const extras=rama==='Trote'?readTroteFields(f):{distancia:'',pista400:'',vueltas400:'',tiempo400:''};
-  const ses={id:'s'+Date.now(),rama,musculo:rama==='Hipertrofia'?musculo:'',...extras,minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
+  const ses={id:'s'+Date.now(),rama,musculo:'',...extras,minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
   return saveSesiones([...getSesiones(),ses],{entrena:''});
  }
  if(e.target.dataset.cargaId){
