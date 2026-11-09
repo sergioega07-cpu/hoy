@@ -517,10 +517,9 @@ function sesion(p,ses){
  return h;
 }
 
-// ---------- Comida: Waistline (GPL-3.0) en ./comida/ ----------
-// La pestaña Comida abre Waistline. Hoy lee su diario (IndexedDB "waistlineDb") y sus metas
-// (localStorage "settings") con la misma fórmula de Waistline (foods-meals-recipes.js, getTotalNutrition):
-// multiplicador = (porción anotada / porción del alimento) × cantidad.
+// ---------- Comida: Waistline (GPL-3.0) en ./comida/ — PAUSADA (2026-11-09) ----------
+// La pestaña y «Macros de hoy» están ocultas; ./comida/ y localStorage/IndexedDB se conservan.
+// Helpers abajo quedan por si se reactiva. Fórmula Waistline: (porción anotada / porción) × cantidad.
 function waistlineDb(){
  return new Promise(res=>{
   let r;try{r=indexedDB.open('waistlineDb')}catch{return res(null)}
@@ -642,7 +641,6 @@ function vHoy(){
  ${[['Verde','g'],['Amarillo','y'],['Rojo','r']].map(([n,c])=>`<button class="${c} ${s.rec===n?'on':''}" data-rec="${n}">${n}</button>`).join('')}</div>
  ${s.rec?'':'<p class="muted">Sin tu sensación muscular no se arma un entrenamiento.</p>'}
  ${s.rec==='Rojo'?'<p class="muted">Sensación muscular en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
- <section class="card"><h2>Macros de hoy</h2><div id="macros-hoy"><p class="muted">Cargando…</p></div></section>
  <section class="card"><h2>Estudio</h2><p>${CALC.t}</p><button data-go="estudiar">Desarrollar</button> ${s.calc?`<span class="muted">· ${s.calc}</span>`:''}</section>
  ${espiritualLectura(s,false)}`;
  return h;
@@ -691,11 +689,12 @@ async function showAudio(key){
 let mr=null;
 function render(){
  $('#fecha').textContent=fmt(D);
+ // Comida pausada (2026-11-09): carpeta ./comida/ y datos se conservan; sin pestaña ni Macros de hoy
+ if(tab==='comida')tab='hoy';
  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
- $('#view').innerHTML={hoy:vHoy,comida:vComida,entrenar:vEntrenar,estudiar:vEstudiar,espiritual:vEspiritual}[tab]();
+ const vistas={hoy:vHoy,entrenar:vEntrenar,estudiar:vEstudiar,espiritual:vEspiritual};
+ $('#view').innerHTML=(vistas[tab]||vHoy)();
  if(tab==='espiritual')showAudio(D);
- if(tab==='hoy')fillMacrosHoy();
- if(tab==='comida')comidaAltura();
  if(tab==='hoy'||tab==='entrenar'){
   getSesiones().filter(x=>x.hecho).forEach(x=>showAudio('entreno:'+D+':'+x.id));
   if(dia().hecho)showAudio('entreno:'+D);
@@ -705,7 +704,6 @@ document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  if(d.t){tab=d.t;render();scrollTo(0,0);return}
  if(d.go){tab=d.go;render();scrollTo(0,0);return}
- if('objetivos' in d){localStorage.setItem('hoy:irObjetivos','1');tab='comida';render();scrollTo(0,0);return}
  if(d.animo)return setDia({animo:d.animo});
  if(d.rec)return setDia({rec:d.rec});
  if(d.entrena)return setDia({entrena:d.entrena,descanso:d.entrena==='Sí'?'':dia().descanso});
