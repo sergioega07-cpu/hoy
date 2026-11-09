@@ -1,0 +1,161 @@
+{
+  "schema": "actalog-compatible-draft-v1",
+  "based_on": {
+    "repo": "https://github.com/johnzastrow/actalog",
+    "license": "MIT",
+    "domain": [
+      "internal/domain/wod.go",
+      "internal/domain/user_workout.go"
+    ]
+  },
+  "unit_note": "Cargas en los Word están en libras (salvo donde diga kg). No uniformar.",
+  "wods": [
+    {
+      "id": "sergio-everest",
+      "name": "Everest",
+      "source": "Sergio · semana-cf-everest-front-squat.docx",
+      "type": "Notables",
+      "regime": "Fastest Time",
+      "score_type": "Time (HH:MM:SS)",
+      "description": "For Time:\n21-15-9\nBack Squats (315/225)\nStrict Handstand Push-ups",
+      "is_standard": false,
+      "week_file": "semana-cf-everest-front-squat.docx",
+      "day": "LUNES"
+    },
+    {
+      "id": "sergio-lace-up",
+      "name": "Lace Up",
+      "source": "Sergio · semana-cf-lace-up-professor-chaos.docx",
+      "type": "Notables",
+      "regime": "Fastest Time",
+      "score_type": "Time (HH:MM:SS)",
+      "description": "For Time:\n60 Dumbbell Snatches (55)\n50 Wallballs (30)\n40 Calorie Assault Bike\n30 Burpee Box Jumps Overs\n20 Bar Muscle-ups",
+      "is_standard": false,
+      "week_file": "semana-cf-lace-up-professor-chaos.docx",
+      "day": "Lunes"
+    },
+    {
+      "id": "sergio-criss-cross",
+      "name": "Criss Cross",
+      "source": "Sergio · semana-cf-lace-up-professor-chaos.docx",
+      "type": "Notables",
+      "regime": "AMRAP",
+      "score_type": "Rounds+Reps",
+      "description": "AMRAP 15:\n30 Double Unders\n15 Power Cleans (115)\n30 Double Unders\n15 Toes to Bar",
+      "is_standard": false,
+      "week_file": "semana-cf-lace-up-professor-chaos.docx",
+      "day": "Martes"
+    },
+    {
+      "id": "sergio-flash-flood",
+      "name": "Flash Flood",
+      "source": "Sergio · semana-cf-lace-up-professor-chaos.docx",
+      "type": "Notables",
+      "regime": "Fastest Time",
+      "score_type": "Time (HH:MM:SS)",
+      "description": "2 Rounds For Time:\n400 Meter Run\n21 Thrusters (115)",
+      "is_standard": false,
+      "week_file": "semana-cf-lace-up-professor-chaos.docx",
+      "day": "Miercoles"
+    },
+    {
+      "id": "sergio-professor-chaos",
+      "name": "Professor Chaos",
+      "source": "Sergio · semana-cf-lace-up-professor-chaos.docx",
+      "type": "Notables",
+      "regime": "Fastest Time",
+      "score_type": "Time (HH:MM:SS)",
+      "description": "For Time:\n45 Chest to Bar Pull-Ups\n800 Meter Run\n15 Power Snatches (135)\n800 Meter Run\n15 Power Snatches (135)\n800 Meter Run\n45 Chest to Bar Pull-Ups",
+      "is_standard": false,
+      "week_file": "semana-cf-lace-up-professor-chaos.docx",
+      "day": "Sábado"
+    },
+    {
+      "id": "sergio-boat-race",
+      "name": "Boat Race",
+      "source": "Sergio · semana-cf-boat-race-team.docx",
+      "type": "Notables",
+      "regime": "Fastest Time",
+      "score_type": "Time (HH:MM:SS)",
+      "description": "3 Rounds For Time:\n500 Meter Row\n400 Meter Run\n(3 min entre ronda)",
+      "is_standard": false,
+      "week_file": "semana-cf-boat-race-team.docx",
+      "day": "VIERNES"
+    },
+    {
+      "id": "sergio-go-fish",
+      "name": "Go Fish",
+      "source": "Sergio · semana-cf-lace-up-professor-chaos.docx",
+      "type": "Notables",
+      "regime": "Fastest Time",
+      "score_type": "Time (HH:MM:SS)",
+      "description": "For Time:\nBuy-in: 1,000 Meter Row\n3 Rounds:\n21 Deadlifts (185/135)\n15 Barbell-Facing Burpees\n9 Push Jerks (145)",
+      "is_standard": false,
+      "week_file": "semana-cf-lace-up-professor-chaos.docx",
+      "day": "Viernes"
+    }
+  ],
+  "weeks": [
+    {
+      "id": "semana-10-sergio",
+      "title": "Semana 10: Sergio",
+      "file": "semana-10-sergio-fuerza-gimnasia-wod.docx",
+      "pattern": "Lunes–Sábado, Jueves rest (típico CF)",
+      "named_wods": [],
+      "notes": "Tiene bloques Fuerza / Gimnástico / Wod / Accesorio. Los WOD del archivo no llevan nombre propio (p. ej. «4time:…», «Amrarp 5 minutos :Burpees»); no se inventan títulos."
+    },
+    {
+      "id": "semana-everest",
+      "title": "Semana CF · Everest / front squat",
+      "file": "semana-cf-everest-front-squat.docx",
+      "named_wods": [
+        "sergio-everest"
+      ],
+      "notes": "Incluye además acondicionamientos For Time / EMOM / AMRAP sin nombre propio — listados en weeks_detail, no como WOD con nombre."
+    },
+    {
+      "id": "semana-lace-up",
+      "title": "Semana CF · Lace Up / Professor Chaos",
+      "file": "semana-cf-lace-up-professor-chaos.docx",
+      "named_wods": [
+        "sergio-lace-up",
+        "sergio-criss-cross",
+        "sergio-flash-flood",
+        "sergio-go-fish",
+        "sergio-professor-chaos"
+      ]
+    },
+    {
+      "id": "semana-boat-race",
+      "title": "Semana CF · Boat Race / team",
+      "file": "semana-cf-boat-race-team.docx",
+      "named_wods": [
+        "sergio-boat-race"
+      ],
+      "notes": "JUEVES REST DAY. Sábado team AMRAP 25 con thrusters que suben de peso por ronda."
+    }
+  ],
+  "logged": {
+    "user_workouts": [],
+    "note": "En el repo no hay resultados CrossFit en hoy:*. Si en el teléfono hay hoy:dia:* con rama CrossFit, se pueden migrar como UserWorkout genéricos (sin WOD id) cuando haya UI. No se inventan tiempos ni rounds."
+  },
+  "historical_loads_not_prs": [
+    {
+      "lift": "front squat",
+      "note": "100% 245 lb (archivo histórico; no PR actual)",
+      "source": "analisis-ramas.md"
+    },
+    {
+      "lift": "clean",
+      "note": "215 lb al 90% (archivo histórico)",
+      "source": "analisis-ramas.md"
+    },
+    {
+      "lift": "clean and jerk",
+      "note": "215 lb al 87% (archivo histórico)",
+      "source": "analisis-ramas.md"
+    }
+  ],
+  "generated_at": "2026-11-09T13:59:37.317636+00:00",
+  "actalog_sample_export_note": "imports/user_workouts_export_2025-12-22.json en actalog-src es de br8kwall@gmail.com (upstream), NO de Sergio — no se importa."
+}

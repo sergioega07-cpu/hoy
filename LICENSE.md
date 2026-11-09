@@ -23,8 +23,13 @@
   interactúa por red) y el resto de Templo bajo GPL-3.0. El repo público cumple la oferta de fuente.
   Cambios Templo: `temploSeed.js` (rutinas/migración), `templo-theme.css` (letras/colores/fondos), media
   selectiva de ejercicios de Sergio (ver `gimnasio/exercise-media/NOTICE.md`).
+
+- **`crossfit/`** es [garage-wod / GRGWOD](https://github.com/tribett/garage-wod) (Copyright Michael Tribett y colaboradores),
+  build estático `VITE_TEMPLO=1` bajo la **MIT License** (texto en [`crossfit/LICENSE-MIT.txt`](crossfit/LICENSE-MIT.txt);
+  ver también [`crossfit/NOTICE.md`](crossfit/NOTICE.md)).
+  Cambios Templo: letras/colores/fondos (tema dorado), seed de WODs/semanas de Sergio (`temploSeed`), `base: './'`.
 - Framework7 (MIT), Font Awesome y Material Icons conservan sus licencias en sus carpetas.
-- Como Templo incluye Waistline (GPL-3.0) y openGym (AGPL-3.0), el conjunto se distribuye de forma compatible:
-  openGym/`gimnasio/` bajo **AGPL-3.0-or-later**; el resto bajo **GPL-3.0 o posterior**, per §13.
+- Como Templo incluye Waistline (GPL-3.0), openGym (AGPL-3.0) y garage-wod (MIT), el conjunto se distribuye de forma compatible:
+  openGym/`gimnasio/` bajo **AGPL-3.0-or-later**; `crossfit/` bajo **MIT**; el resto bajo **GPL-3.0 o posterior**, per §13 (AGPL/GPL).
   El código fuente completo es este repositorio público.
 - Datos de alimentos: Open Food Facts (ODbL) y USDA FoodData Central (dominio público), consultados en vivo.

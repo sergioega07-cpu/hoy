@@ -1,0 +1,84 @@
+{
+  "benchmarks": [
+    "Everest",
+    "Lace Up",
+    "Criss Cross",
+    "Flash Flood",
+    "Professor Chaos",
+    "Boat Race",
+    "Go Fish"
+  ],
+  "weeks": [
+    {
+      "weekNumber": 1,
+      "title": "Semana 10: Sergio",
+      "days": [
+        "Friday",
+        "Saturday"
+      ]
+    },
+    {
+      "weekNumber": 2,
+      "title": "Semana CF · Everest / front squat",
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Friday",
+        "Saturday"
+      ]
+    },
+    {
+      "weekNumber": 3,
+      "title": "Semana CF · Lace Up / Professor Chaos",
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Friday",
+        "Saturday"
+      ]
+    },
+    {
+      "weekNumber": 4,
+      "title": "Semana CF · Boat Race / team",
+      "days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Friday",
+        "Saturday"
+      ]
+    }
+  ],
+  "gaps": [
+    {
+      "week": "Semana 10: Sergio",
+      "missing_days_no_conditioning_in_weeks_detail": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday"
+      ]
+    },
+    {
+      "week": "Semana CF · Everest / front squat",
+      "missing_days_no_conditioning_in_weeks_detail": [
+        "Thursday"
+      ]
+    },
+    {
+      "week": "Semana CF · Lace Up / Professor Chaos",
+      "missing_days_no_conditioning_in_weeks_detail": [
+        "Thursday"
+      ]
+    },
+    {
+      "week": "Semana CF · Boat Race / team",
+      "missing_days_no_conditioning_in_weeks_detail": [
+        "Thursday"
+      ]
+    }
+  ],
+  "unmapped": []
+}
