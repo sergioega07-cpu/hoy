@@ -1,0 +1,88 @@
+/*
+  Copyright 2018, 2019, 2020, 2021 David Healey
+
+  This file is part of Waistline.
+
+  Waistline is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Waistline is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with app.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+.align-end {text-align: end; padding: 0 0.4em !important;}
+* {-webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;}
+input {-webkit-touch-callout: default !important; -webkit-user-select: auto !important; -khtml-user-select: auto !important; -moz-user-select: auto !important; -ms-user-select: auto !important; user-select: auto !important;}
+
+select.align-end {direction: rtl;}
+option {direction: ltr;}
+
+html[dir="rtl"] select.align-end {direction: ltr;}
+html[dir="rtl"] option {direction: rtl;}
+
+#categories { width: 100%; }
+#categories-list:not([disabled]) { color: inherit; }
+
+i.searchbar-icon {margin: -12px 12px;}
+
+.item-content.item-inner {column-gap: 0.8em;}
+
+.photo-holder {width: 100%; text-align: center;}
+
+#food-edit-form #barcode {pointer-events: none;}
+
+#food-edit-form .radio-label {vertical-align: middle;}
+
+#food-edit-form .form-inputs .item-input .item-title {width: 32vw;}
+#meal-edit-form .form-inputs .item-input .item-title {width: 32vw;}
+#recipe-edit-form .form-inputs .item-input .item-title {width: 32vw;}
+#quantity-container.item-input .item-title {width: 60vw;}
+#nutrition .item-input .item-title {width: 60vw;}
+
+#nutrition .item-hidden {display: none;}
+
+#import-export-settings .item-input .item-title {width: 60vw;}
+
+div.food-thumbnail {width: 30%; margin: 0.2em 1em 0.2em 0; text-align: center;}
+html[dir="rtl"] div.food-thumbnail {margin: 0.2em 0 0.2em 1em;}
+div.food-thumbnail > img {max-width: 100%; max-height: 12em;}
+
+.list.multi-line-titles .item-title {white-space: normal; -webkit-line-clamp: 2; -webkit-box-orient: vertical; display: -webkit-box;}
+.list .item-title-row .item-after {align-self: flex-start;}
+.list .item-subtitle {font-style: italic;}
+
+.notification-text {overflow-wrap: break-word;}
+
+/* Custom color themes */
+.color-theme-pink {
+  --f7-theme-color: #f6b0ba;
+  --f7-theme-color-rgb: 246, 176, 186;
+  --f7-theme-color-shade: #f28b9a;
+  --f7-theme-color-tint: #fad5da;
+}
+
+.color-theme-camino {
+  --f7-theme-color: #FF5FE1;
+  --f7-theme-color-rgb: 255, 95, 225;
+  --f7-theme-color-shade: #ff36d9;
+  --f7-theme-color-tint: #ff88e9;
+}
+
+.color-theme-eink {
+  --f7-theme-color: #253238;
+  --f7-theme-color-rgb: 37, 50, 56;
+  --f7-theme-color-shade: #151c1f;
+  --f7-theme-color-tint: #354851;
+}
+
+.item-checkbox .icon-checkbox {
+  margin-left: 6px;
+  --f7-checkbox-extra-margin: 16px;
+}

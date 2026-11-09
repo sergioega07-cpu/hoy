@@ -517,24 +517,47 @@ function sesion(p,ses){
  return h;
 }
 
-// ---------- Comida ----------
-let FOODS=[],CHARLES=[];
-const custom=()=>load('hoy:alimentos',[]);
-const allFoods=()=>[...FOODS,...CHARLES,...custom()];
-const hasMacros=f=>!!(f&&Number.isFinite(+f.g)&&+f.g>0&&['p','c','f','k'].every(k=>Number.isFinite(+f[k])));
-const macrosOf=(f,q)=>{if(!hasMacros(f))return null;const r=f.g/100*q;return{p:f.p*r,c:f.c*r,f:f.f*r,k:f.k*r}};
-const COMIDAS=['Desayuno','Almuerzo','Cena','Snacks'];
-function totals(d){
- const m=load(menuKey(d),{}),t={p:0,c:0,f:0,k:0};
- [...COMIDAS,'Extras'].forEach(b=>(m[b]||[]).forEach(it=>{const f=allFoods().find(x=>x.id===it.id);const x=macrosOf(f,it.q);if(x)for(const k in t)t[k]+=x[k]}));
+// ---------- Comida: Waistline (GPL-3.0) en ./comida/ ----------
+// La pestaña Comida abre Waistline. Hoy lee su diario (IndexedDB "waistlineDb") y sus metas
+// (localStorage "settings") con la misma fórmula de Waistline (foods-meals-recipes.js, getTotalNutrition):
+// multiplicador = (porción anotada / porción del alimento) × cantidad.
+function waistlineDb(){
+ return new Promise(res=>{
+  let r;try{r=indexedDB.open('waistlineDb')}catch{return res(null)}
+  r.onupgradeneeded=e=>{e.target.transaction.abort()}; // si Waistline aún no creó su base, no la creamos aquí
+  r.onsuccess=()=>res(r.result);r.onerror=()=>res(null);
+ });
+}
+const idbReq=q=>new Promise(res=>{q.onsuccess=()=>res(q.result);q.onerror=()=>res(undefined)});
+async function totals(d){
+ const t={p:0,c:0,f:0,k:0},db=await waistlineDb();if(!db)return t;
+ try{
+  const [y,m,dd]=d.split('-').map(Number);
+  const entry=await idbReq(db.transaction('diary').objectStore('diary').index('dateTime').get(new Date(Date.UTC(y,m-1,dd))));
+  for(const it of (entry&&entry.items)||[]){
+   if(it.category===undefined)continue;
+   const store=it.type==='recipe'?'recipes':'foodList';
+   const x=await idbReq(db.transaction(store).objectStore(store).get(it.id));if(!x||!x.nutrition)continue;
+   const mult=(parseFloat(it.portion)/parseFloat(x.portion))*(parseFloat(it.quantity)||0);
+   const v=n=>{const r=(Math.round((x.nutrition[n]||0)*mult*100)/100)||0;return r>0?r:0};
+   t.p+=v('proteins');t.c+=v('carbohydrates');t.f+=v('fat');t.k+=v('calories')||(x.nutrition.kilojoules?v('kilojoules')*0.23900573614:0);
+  }
+ }catch{}finally{db.close()}
  return t;
 }
-function loggedSinMacros(d){
- const m=load(menuKey(d),{});
- return [...COMIDAS,'Extras'].some(b=>(m[b]||[]).some(it=>{const f=allFoods().find(x=>x.id===it.id);return f&&!hasMacros(f)}));
+// Metas: las de Waistline (Comida → menú → Metas); si aún no abre Waistline, las antiguas de Templo
+function metas(d){
+ const s=load('settings',null),g={};
+ if(s&&s.goals){
+  const day=dow(d),map={p:'proteins',c:'carbohydrates',f:'fat',k:'calories'};
+  for(const k in map){const st=s.goals[map[k]]||{},list=st['goal-list']||[],x=list[list.length-1];if(!x)continue;
+   const v=parseFloat(x['shared-goal']?x.goal[0]:x.goal[day]);if(v>0)g[k]=v}
+  return g;
+ }
+ return load('hoy:metas',{});
 }
-function resumen(d){
- const t=totals(d),g=load('hoy:metas',{}),lab={p:'Proteína',c:'Carbos',f:'Grasas',k:'kcal'};
+async function resumen(d){
+ const t=await totals(d),g=metas(d),lab={p:'Proteína',c:'Carbos',f:'Grasas',k:'kcal'};
  const conMacros=['p','c','f','k'].some(k=>t[k]>0);
  const set=['p','c','f','k'].filter(k=>g[k]>0);
  const caja=vals=>`<div class="macros">${['p','c','f','k'].map(k=>`<div><b>${Math.round(vals[k])}</b>${lab[k]}${k!=='k'?' g':''}</div>`).join('')}</div>`;
@@ -546,12 +569,13 @@ function resumen(d){
    h+='<ul>'+set.map(k=>{const diff=t[k]-g[k];return `<li>${lab[k]}: ${diff>=0?`<span class="ok">alcanza</span> (+${Math.round(diff)})`:`<span class="falta">falta ${Math.round(-diff)}${k!=='k'?' g':''}</span>`} de ${g[k]}</li>`}).join('')+'</ul>';
   }
  }else{
-  h+='<p class="muted">Aún no hay un resumen de macros a consumir. Se anotan en Comida → «Tus metas»; no se inventan.</p>';
+  h+='<p class="muted">Aún no hay metas de macros. Se anotan en Comida → menú → Metas; no se inventan.</p>';
   if(conMacros)h+='<p class="muted">Consumido hasta ahora</p>'+caja(t);
  }
- if(loggedSinMacros(d))h+='<p class="muted">Hay comidas de tu menú anotadas. Los macros no están calculados: Charles no me pasó esos números y no los invento.</p>';
  return h;
 }
+async function fillMacrosHoy(){const el=$('#macros-hoy');if(!el)return;let h=await resumen(D);
+ if(!localStorage.getItem('hoy:waistlineMigrado')&&Object.keys(localStorage).some(k=>k.startsWith('hoy:menu:')))h+='<p class="muted">Abre Comida una vez para pasar tus comidas anteriores a Waistline.</p>';const el2=$('#macros-hoy');if(el2)el2.innerHTML=h}
 
 // ---------- Estudio / Espiritual ----------
 const CALC={t:'Deriva f(x) = 3x² · sen(x) y evalúa f′(π/2).',h:'Pista: regla del producto, (uv)′ = u′v + uv′.',e:'Para evaluar: sen(π/2) = 1 y cos(π/2) = 0. Sustituye esos valores en f′(x).'};
@@ -623,46 +647,13 @@ function vHoy(){
  ${[['Verde','g'],['Amarillo','y'],['Rojo','r']].map(([n,c])=>`<button class="${c} ${s.rec===n?'on':''}" data-rec="${n}">${n}</button>`).join('')}</div>
  ${s.rec?'':'<p class="muted">Sin tu sensación muscular no se arma un entrenamiento.</p>'}
  ${s.rec==='Rojo'?'<p class="muted">Sensación muscular en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
- <section class="card"><h2>Macros de hoy</h2>${resumen(D)}</section>
+ <section class="card"><h2>Macros de hoy</h2><div id="macros-hoy"><p class="muted">Cargando…</p></div></section>
  <section class="card"><h2>Estudio</h2><p>${CALC.t}</p><button data-go="estudiar">Desarrollar</button> ${s.calc?`<span class="muted">· ${s.calc}</span>`:''}</section>
  ${espiritualLectura(s,false)}`;
  return h;
 }
-const GRUPOS=[{id:'proteina',label:'Proteína'},{id:'carbohidratos',label:'Carbohidratos'},{id:'grasa',label:'Grasa'},{id:'vegetales',label:'Vegetales'}];
-const grupoLabel=id=>(GRUPOS.find(g=>g.id===id)||{}).label||'';
-function menuFoods(grupo){
- return allFoods().filter(f=>{
-  if(f.grupo===grupo)return true;
-  if(f.propio&&!f.grupo)return true;
-  return false;
- });
-}
-function pickerHTML(b){
- return GRUPOS.map(g=>{
-  const list=menuFoods(g.id);
-  const opts=list.length?list.map(f=>`<option value="${f.id}">${esc(f.n)} — ${esc(f.u)}</option>`).join(''):'';
-  return `<div class="food-pick"><span class="kicker">Opción · ${g.label}</span><div class="row"><select data-sel="${b}" data-grupo="${g.id}"><option value="">Elegir ${g.label.toLowerCase()}…</option>${opts}</select>
- <input type="number" inputmode="decimal" min="0.25" step="0.25" value="1" data-qty="${b}" data-grupo="${g.id}" style="width:90px" aria-label="porciones"><button class="sm prim" data-add="${b}" data-grupo="${g.id}">Agregar</button></div></div>`;
- }).join('');
-}
-function listaHTML(d,b){
- const m=load(menuKey(d),{});return (m[b]||[]).map((it,i)=>{const f=allFoods().find(x=>x.id===it.id);if(!f)return '';const x=macrosOf(f,it.q);
-  const extra=[grupoLabel(it.grupo||f.grupo),f.u,f.nota,x?`P ${x.p.toFixed(1)} · C ${x.c.toFixed(1)} · G ${x.f.toFixed(1)} · ${Math.round(x.k)} kcal`:''].filter(Boolean).join(' · ');
-  return `<div class="item"><span>${it.q}× ${esc(f.n)}<br><span class="muted">${esc(extra)}</span></span><button class="sm" data-del="${b}:${i}">✕</button></div>`}).join('');
-}
-function menuTarget(){return load('hoy:menuFecha',null)||addDays(D,1)}
 function vComida(){
- const T=menuTarget(),g=load('hoy:metas',{});
- let h=`<section class="card"><h2>${T===addDays(D,1)?'Menú para mañana':'Menú para '+fmt(T)}</h2><p class="accent">${fmt(T)}</p>
- <div class="row"><button class="sm" data-mf="-1">◀ día</button><button class="sm" data-mf="0">Mañana</button><button class="sm" data-mf="1">día ▶</button></div></section>`;
- COMIDAS.forEach(b=>h+=`<section class="card"><h2>${b}</h2>${pickerHTML(b)}${listaHTML(T,b)}</section>`);
- h+=`<section class="card"><h2>Total del día vs metas</h2>${resumen(T)}</section>
- <section class="card"><h2>Tus metas</h2><p class="muted">Escribe tus propias metas diarias. La app no las inventa.</p><div class="grid2">
- ${[['p','Proteína (g)'],['c','Carbos (g)'],['f','Grasas (g)'],['k','kcal (opcional)']].map(([k,l])=>`<label>${l}<input type="number" inputmode="decimal" data-meta="${k}" value="${g[k]??''}" placeholder="tu meta"></label>`).join('')}</div></section>
- <section class="card"><h2>Crear alimento propio</h2><p class="muted">Valores por porción, escritos por ti.</p>
- <input id="cn" placeholder="Nombre (ej. queque de la casa)"><div class="grid2" style="margin-top:8px"><input id="cu" placeholder="Porción (ej. 1 trozo)"><input id="ck" type="number" inputmode="decimal" placeholder="kcal"><input id="cp" type="number" inputmode="decimal" placeholder="Proteína g"><input id="cc" type="number" inputmode="decimal" placeholder="Carbos g"><input id="cf" type="number" inputmode="decimal" placeholder="Grasas g"><button class="prim" data-crear>Guardar</button></div></section>
- <p class="muted">En cada comida eliges proteína, carbohidratos, grasa y vegetales. Son alimentos que has comido con Charles, no un catálogo general ni un plato cerrado. Los macros se suman cuando él los tenga; no se inventan.</p>`;
- return h;
+ return `<iframe class="comida-frame" src="./comida/index.html" title="Comida (Waistline)"></iframe>`;
 }
 function vEntrenar(){
  return `<section class="card"><h2>Tu entrenamiento</h2>${trainingPanel()}</section>`;
@@ -705,6 +696,8 @@ function render(){
  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
  $('#view').innerHTML={hoy:vHoy,comida:vComida,entrenar:vEntrenar,estudiar:vEstudiar,espiritual:vEspiritual}[tab]();
  if(tab==='espiritual')showAudio(D);
+ if(tab==='hoy')fillMacrosHoy();
+ if(tab==='comida'){const r=document.documentElement.style;r.setProperty('--top-h',$('.top').getBoundingClientRect().bottom+'px');r.setProperty('--tabs-h',$('.tabs').offsetHeight+'px')}
  if(tab==='hoy'||tab==='entrenar'){
   getSesiones().filter(x=>x.hecho).forEach(x=>showAudio('entreno:'+D+':'+x.id));
   if(dia().hecho)showAudio('entreno:'+D);
@@ -758,14 +751,6 @@ document.addEventListener('click',async e=>{
   return setDia({calcTxt:txt,calcChk:r.estado,calcMsg:r.msg});
  }
  if(d.calc)return setDia({calc:d.calc,calcTxt:$('#calcTxt').value});
- if(d.mf!==undefined){const n=+d.mf;save('hoy:menuFecha',n===0?null:addDays(menuTarget(),n));return render()}
- if(d.add){const blk=d.add,grupo=d.grupo||'',sel=document.querySelector(`select[data-sel="${blk}"]${grupo?`[data-grupo="${grupo}"]`:''}`),qty=document.querySelector(`input[data-qty="${blk}"]${grupo?`[data-grupo="${grupo}"]`:''}`);
-  const id=sel&&sel.value,q=parseFloat(qty&&qty.value)||1;if(!id)return;
-  const T=blk==='Extras'?D:menuTarget(),m=load(menuKey(T),{});(m[blk]=m[blk]||[]).push({id,q,grupo});save(menuKey(T),m);return render()}
- if(d.del){const[blk,i]=d.del.split(':'),T=blk==='Extras'?D:menuTarget(),m=load(menuKey(T),{});m[blk].splice(+i,1);save(menuKey(T),m);return render()}
- if('crear' in d){const v=id=>$(id).value.trim(),n=parseFloat;if(!v('#cn'))return alert('Ponle un nombre');
-  // guardado como "por porción": g=100 para que macrosOf use los valores tal cual
-  const c=custom();c.push({id:'u'+Date.now(),n:v('#cn'),u:v('#cu')||'1 porción',g:100,p:n(v('#cp'))||0,c:n(v('#cc'))||0,f:n(v('#cf'))||0,k:n(v('#ck'))||0,propio:1});save('hoy:alimentos',c);return render()}
  if(d.recKey){const key=d.recKey,stEl=document.querySelector(`[data-recst="${CSS.escape(key)}"]`);
   try{const st=await navigator.mediaDevices.getUserMedia({audio:true});const ch=[];mr=new MediaRecorder(st);mr.ondataavailable=ev=>ch.push(ev.data);
    mr.onstop=async()=>{st.getTracks().forEach(t=>t.stop());await putAudio(key,new Blob(ch,{type:mr.mimeType||'audio/mp4'}));if(stEl)stEl.textContent='';showAudio(key)};
@@ -877,12 +862,7 @@ document.addEventListener('change',e=>{
  if((e.target.name==='rama'||e.target.name==='pista400')&&e.target.form&&(e.target.form.id==='training-form'||e.target.form.id==='sesion-edit-form')){
   toggleTrainingExtras(e.target.form);
  }
- const k=e.target.dataset.meta;if(k){const g=load('hoy:metas',{});const v=parseFloat(e.target.value);if(v>0)g[k]=v;else delete g[k];save('hoy:metas',g);render()}
 });
 document.addEventListener('input',e=>{if(e.target.id==='calcTxt')save(dayKey(D),{...dia(),calcTxt:e.target.value})});
-Promise.all([
- fetch('./foods.json').then(r=>r.ok?r.json():[]).catch(()=>[]),
- fetch('./charles-menu.json').then(r=>r.ok?r.json():[]).catch(()=>[])
-]).then(([usda,menu])=>{FOODS=usda;CHARLES=Array.isArray(menu)?menu:[];render()}).catch(()=>render());
 render();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');

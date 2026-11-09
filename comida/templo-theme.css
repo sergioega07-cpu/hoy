@@ -1,0 +1,49 @@
+/* Templo: solo letras, colores y fondos sobre Waistline (Framework7). No cambia estructura ni tamaños. */
+:root, :root.theme-dark, .theme-dark {
+  --t-charcoal:#080605; --t-espresso:#241c16; --t-sand:#beac8a; --t-sand-hi:#d8c8a6; --t-ivory:#efe6d2; --t-line:rgba(190,172,138,.18);
+  --f7-theme-color:#beac8a; --f7-theme-color-rgb:190,172,138; --f7-theme-color-shade:#a08d6a; --f7-theme-color-tint:#d8c8a6;
+  --f7-font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f7-text-color:#efe6d2;
+  --f7-page-bg-color:transparent;
+  --f7-bars-bg-color:rgba(8,6,5,.72); --f7-bars-bg-color-rgb:8,6,5; --f7-bars-text-color:#efe6d2; --f7-bars-link-color:#beac8a; --f7-bars-border-color:rgba(190,172,138,.18);
+  --f7-navbar-bg-color:rgba(8,6,5,.72); --f7-toolbar-bg-color:rgba(8,6,5,.72); --f7-tabbar-bg-color:rgba(8,6,5,.72);
+  --f7-navbar-title-font-weight:500;
+  --f7-list-bg-color:rgba(36,28,22,.42); --f7-list-strong-bg-color:rgba(36,28,22,.42); --f7-list-item-border-color:rgba(190,172,138,.14); --f7-list-border-color:rgba(190,172,138,.18);
+  --f7-list-item-title-text-color:#efe6d2; --f7-list-item-subtitle-text-color:#beac8a; --f7-list-item-text-text-color:#ddcfb2; --f7-list-item-after-text-color:#beac8a;
+  --f7-block-title-text-color:#beac8a; --f7-block-strong-bg-color:rgba(36,28,22,.42); --f7-block-text-color:#ddcfb2;
+  --f7-card-bg-color:rgba(36,28,22,.42); --f7-card-outline-border-color:rgba(190,172,138,.18); --f7-card-header-text-color:#beac8a;
+  --f7-input-text-color:#efe6d2; --f7-input-placeholder-color:rgba(239,230,210,.45); --f7-label-text-color:#beac8a;
+  --f7-searchbar-bg-color:rgba(8,6,5,.72); --f7-searchbar-input-bg-color:rgba(8,6,5,.45); --f7-searchbar-input-text-color:#efe6d2;
+  --f7-panel-bg-color:#0c0806; --f7-dialog-bg-color:#241c16; --f7-popover-bg-color:#241c16; --f7-sheet-bg-color:#241c16; --f7-actions-bg-color:#241c16; --f7-popup-bg-color:#0c0806;
+  --f7-calendar-bg-color:#241c16; --f7-toast-bg-color:#241c16; --f7-toast-text-color:#efe6d2;
+  --f7-fab-bg-color:#beac8a; --f7-fab-text-color:#080605;
+  --f7-button-text-color:#beac8a; --f7-preloader-color:#beac8a;
+}
+html, body { background:#080605 !important; }
+body {
+  color:#efe6d2;
+  background:
+    radial-gradient(ellipse 70vw 50vh at 10% 8%,rgba(74,40,27,.42),transparent 70%),
+    radial-gradient(ellipse 70vw 60vh at 88% 30%,rgba(29,39,32,.8),transparent 70%),
+    radial-gradient(ellipse 60vw 50vh at 14% 70%,rgba(29,39,32,.8),transparent 70%),
+    radial-gradient(ellipse 60vw 50vh at 85% 95%,rgba(74,40,27,.42),transparent 70%),
+    linear-gradient(180deg,#080605 0%,#0C0806 30%,#070A08 60%,#080605 100%) !important;
+  background-attachment:fixed !important;
+}
+.page, .page-content, .view, .views, #app { background:transparent !important; }
+#app-panel { background:#0c0806 !important; }
+.navbar .title, .block-title, .card-header, .list .list-group-title, .popup .title, .dialog-title, .login-screen-title {
+  font-family:"Cinzel","Times New Roman",serif !important; color:#beac8a !important; letter-spacing:.04em;
+}
+.list .item-subtitle, .item-text { font-family:"Cormorant Garamond",Georgia,serif; }
+.navbar, .toolbar, .tabbar, .subnavbar { -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
+.card, .list ul, .block-strong { -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+.fab > a { background:#beac8a !important; color:#080605 !important; }
+.list-group-title { background:rgba(8,6,5,.6) !important; }
+/* El tema de color de Waistline (body.color-theme-*) se reemplaza por el dorado de Templo */
+body[class*="color-theme-"], body[class*="color-theme-"] * {
+  --f7-theme-color:#beac8a; --f7-theme-color-rgb:190,172,138; --f7-theme-color-shade:#a08d6a; --f7-theme-color-tint:#d8c8a6; --swiper-theme-color:#beac8a;
+}
+.list .list-group-title, .list-group-title, .block-title-medium { background:rgba(8,6,5,.55) !important; color:#beac8a !important; }
+.subnavbar { background:rgba(8,6,5,.72) !important; }
+.toolbar-bottom, .toolbar { background:rgba(8,6,5,.72) !important; }
