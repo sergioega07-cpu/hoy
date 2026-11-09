@@ -650,7 +650,7 @@ const getAudio=async k=>{const db=await idb();return new Promise(r=>{const q=db.
 
 // ---------- Vistas ----------
 const D=today();
-let tab='hoy',editSesionId=null;
+let tab='hoy',editSesionId=null,estudiarSub='calculo';
 function dia(){return load(dayKey(D),{})}
 function setDia(p){save(dayKey(D),{...dia(),...p});render()}
 const opts=(list,cur,attr)=>list.map(x=>`<button class="${x===cur?'on':''}" data-${attr}="${esc(x)}">${esc(x)}</button>`).join('');
@@ -696,9 +696,20 @@ function vEntrenar(){
  // Pestaña retirada: redirige a Hoy vía render(); se conserva por si un enlace legacy llama la vista.
  return vHoy();
 }
+function estudiarAltura(){const r=document.documentElement.style,bajo=innerHeight<520;r.setProperty('--top-h',(bajo?0:$('.top').getBoundingClientRect().bottom)+'px');r.setProperty('--tabs-h',$('.tabs').offsetHeight+'px')}
+addEventListener('resize',()=>{if(tab==='estudiar'&&estudiarSub!=='calculo')estudiarAltura()});
 function vEstudiar(){
  const s=dia();
- let h=`<section class="card"><h2>Cálculo</h2><p class="muted">Ejemplo mientras conectamos tu nivel.</p><p class="serif">${CALC.t}</p><p class="muted">${CALC.h}</p>
+ const sub=`<div class="row estudiar-sub" style="margin-bottom:12px"><button type="button" class="${estudiarSub==='calculo'?'on':''}" data-est-sub="calculo">Cálculo</button><button type="button" class="${estudiarSub==='desk'?'on':''}" data-est-sub="desk">Plan</button><button type="button" class="${estudiarSub==='tarjetas'?'on':''}" data-est-sub="tarjetas">Tarjetas</button></div>`;
+ if(estudiarSub==='desk'){
+  estudiarAltura();
+  return `${sub}<iframe class="estudiar-frame" src="./estudiar/desk/index.html" title="Plan (StudyDesk)"></iframe>`;
+ }
+ if(estudiarSub==='tarjetas'){
+  estudiarAltura();
+  return `${sub}<iframe class="estudiar-frame" src="./estudiar/tarjetas/index.html" title="Tarjetas (nenrin / ts-fsrs)"></iframe>`;
+ }
+ let h=`${sub}<section class="card"><h2>Cálculo</h2><p class="muted">Ejemplo mientras conectamos tu nivel. Plan (StudyDesk) y Tarjetas (nenrin/FSRS) están arriba; esto se mantiene hasta que decidas.</p><p class="serif">${CALC.t}</p><p class="muted">${CALC.h}</p>
  <p class="muted">${CALC.e}</p>
  <textarea id="calcTxt" placeholder="Desarrolla aquí la derivada y el valor de f′(π/2)…">${esc(s.calcTxt||'')}</textarea>
  <div class="row" style="margin-top:8px"><button class="prim" data-calc-check>Comprobar</button><button class="${s.calc==='Hecho'?'on':''}" data-calc="Hecho">Hecho</button><button class="${s.calc==='Después'?'on':''}" data-calc="Después">Después</button></div>`;
@@ -741,6 +752,7 @@ function render(){
  if(tab==='gimnasio')gimnasioAltura();
  if(tab==='crossfit')crossfitAltura();
  if(tab==='trote')troteAltura();
+ if(tab==='estudiar'&&estudiarSub!=='calculo')estudiarAltura();
  if(tab==='espiritual')showAudio(D);
  if(tab==='hoy'){
   getSesiones().filter(x=>x.hecho).forEach(x=>showAudio('entreno:'+D+':'+x.id));
@@ -751,6 +763,7 @@ document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  if(d.t){tab=d.t;render();scrollTo(0,0);return}
  if(d.go){tab=d.go;render();scrollTo(0,0);return}
+ if(d.estSub){estudiarSub=d.estSub;tab='estudiar';render();scrollTo(0,0);return}
  if(d.animo)return setDia({animo:d.animo});
  if(d.rec)return setDia({rec:d.rec});
  if(d.entrena)return setDia({entrena:d.entrena,descanso:d.entrena==='Sí'?'':dia().descanso});

@@ -39,3 +39,10 @@
   openGym/`gimnasio/` bajo **AGPL-3.0-or-later**; `crossfit/` bajo **MIT**; el resto bajo **GPL-3.0 o posterior**, per §13 (AGPL/GPL).
   El código fuente completo es este repositorio público.
 - Datos de alimentos: Open Food Facts (ODbL) y USDA FoodData Central (dominio público), consultados en vivo.
+
+- **`estudiar/desk/`** es [StudyDesk](https://github.com/Limecore-Studio/StudyDesk) (Copyright Limecore Studio),
+  build `VITE_TEMPLO=1` bajo **MIT** (texto en [`estudiar/desk/LICENSE-MIT.txt`](estudiar/desk/LICENSE-MIT.txt)).
+  Cambios Templo: guest/onboarding por defecto, letras/colores/fondos.
+- **`estudiar/tarjetas/`** es [nenrin](https://github.com/parmsam/nenrin) (MIT), flashcards con **ts-fsrs**,
+  build `BASE_PATH=./` (texto en [`estudiar/tarjetas/LICENSE-MIT.txt`](estudiar/tarjetas/LICENSE-MIT.txt)).
+  Tema por defecto black+yamabuki. Ver [`estudiar/NOTICE.md`](estudiar/NOTICE.md).

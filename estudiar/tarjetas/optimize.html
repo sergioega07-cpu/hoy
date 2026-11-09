@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Tune Nenrin's FSRS scheduler to your own review history." />
+    <title>Optimize scheduling · Nenrin</title>
+    <script>
+      // Apply the saved theme before first paint (see src/lib/theme.ts).
+      try {
+        var t = JSON.parse(localStorage.getItem('nenrin:theme') || '{}');
+        if (t.mode === 'light' || t.mode === 'dark')
+          document.documentElement.dataset.theme = t.mode;
+        if (t.palette && t.palette !== 'wood') document.documentElement.dataset.palette = t.palette;
+      } catch (e) {}
+    </script>
+    <script type="module" crossorigin src="./assets/optimize-CKGocFvm.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/app-CcWWgWi0.js">
+    <link rel="stylesheet" crossorigin href="./assets/app-Cv3o5ayJ.css">
+    <link rel="stylesheet" crossorigin href="./assets/optimize-nd_lNGuA.css">
+  <link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#2b2520">
+<link rel="icon" href="./favicon.ico" sizes="48x48">
+<link rel="icon" href="./favicon.svg" sizes="any" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon-180x180.png"></head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
