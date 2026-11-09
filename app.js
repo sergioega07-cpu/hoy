@@ -123,11 +123,85 @@ function toggleTrainingExtras(form){
 function weekMusculos(end){
  const seen=[];
  for(let i=6;i>=0;i--){
-  const raw=load(dayKey(addDays(end,-i)),{});
-  const list=Array.isArray(raw.sesiones)?raw.sesiones:(raw.rama?[raw]:[]);
-  list.forEach(x=>{if(x.musculo&&MUSCULOS.includes(x.musculo)&&!seen.includes(x.musculo))seen.push(x.musculo)});
+  sesionesDe(addDays(end,-i)).forEach(x=>{if(x.musculo&&MUSCULOS.includes(x.musculo)&&!seen.includes(x.musculo))seen.push(x.musculo)});
  }
  return seen;
+}
+const CIERRE=['Bien','Pesado','Corté series'];
+function weekFmt(date){
+ return new Intl.DateTimeFormat('es-CL',{timeZone:'UTC',weekday:'short',day:'numeric',month:'numeric'}).format(new Date(date+'T12:00:00Z'));
+}
+function weekVista(end){
+ const rows=[];
+ for(let i=6;i>=0;i--){
+  const date=addDays(end,-i);
+  sesionesDe(date).forEach(x=>{
+   if(!(x.rama&&x.minutosTotal!==''&&x.minutosTotal!=null))return;
+   rows.push({date,x});
+  });
+ }
+ if(!rows.length)return '<p class="muted">Esta semana aún no hay sesiones anotadas.</p>';
+ const mus=weekMusculos(end);
+ let h=`<p class="kicker">Esta semana</p><ul class="week-log">${rows.map(({date,x})=>`<li><time datetime="${date}">${esc(weekFmt(date))}</time> · ${esc(sesionTitulo(x))} · ${esc(x.minutosTotal)} min${x.hecho?' · hecha':''}</li>`).join('')}</ul>`;
+ h+=mus.length?`<p class="muted">Músculos anotados: ${esc(mus.join(', '))}.</p>`:'<p class="muted">Esta semana aún no anotaste un músculo.</p>';
+ return h;
+}
+function fmtCargaLine(c){
+ const bits=[];
+ if(c.kg!==''&&c.kg!=null)bits.push(String(c.kg)+' kg');
+ if(c.reps!==''&&c.reps!=null)bits.push('× '+c.reps);
+ if(c.series!==''&&c.series!=null)bits.push('('+c.series+' series)');
+ return bits.length?c.name+': '+bits.join(' '):'';
+}
+function ultimaSesionResumen(end){
+ for(let i=1;i<=60;i++){
+  const date=addDays(end,-i);
+  const list=sesionesDe(date);
+  for(let j=list.length-1;j>=0;j--){
+   const x=list[j];
+   if(x.rama&&x.minutosTotal!==''&&x.minutosTotal!=null)return `<p class="muted">Última sesión: ${esc(sesionTitulo(x))} el ${esc(weekFmt(date))}.</p>`;
+  }
+ }
+ return '';
+}
+function ultimaCargasDe(ses,blocks,end){
+ const names=(blocks||[]).map(b=>b.name).filter(Boolean);
+ if(!names.length)return '';
+ const found={};
+ for(let i=0;i<=60;i++){
+  const date=addDays(end,-i);
+  sesionesDe(date).forEach(x=>{
+   if(i===0&&x.id===ses.id)return;
+   (x.cargas||[]).forEach(c=>{
+    if(!c||!c.name||found[c.name]||!names.includes(c.name))return;
+    if((c.kg===''||c.kg==null)&&(c.reps===''||c.reps==null)&&(c.series===''||c.series==null))return;
+    found[c.name]=c;
+   });
+  });
+ }
+ const lines=names.map(n=>found[n]?fmtCargaLine(found[n]):'').filter(Boolean);
+ return lines.length?`<p class="muted">La última vez: ${esc(lines.join('; '))}.</p>`:'';
+}
+function cargaVal(ses,name){
+ return (Array.isArray(ses.cargas)?ses.cargas:[]).find(c=>c&&c.name===name)||{};
+}
+function cargaInputs(ses,name,i){
+ const c=cargaVal(ses,name);
+ return `<div class="carga-row">
+<label><span class="kicker">Series</span><input form="carga-${esc(ses.id)}" name="series-${i}" type="number" inputmode="numeric" min="0" step="1" value="${c.series??''}" placeholder="—"></label>
+<label><span class="kicker">Kg</span><input form="carga-${esc(ses.id)}" name="kg-${i}" type="text" inputmode="decimal" value="${esc(c.kg??'')}" placeholder="—"></label>
+<label><span class="kicker">Reps</span><input form="carga-${esc(ses.id)}" name="reps-${i}" type="text" inputmode="text" value="${esc(c.reps??'')}" placeholder="12 o 12/10/8"></label>
+<input form="carga-${esc(ses.id)}" type="hidden" name="name-${i}" value="${esc(name)}">
+</div>`;
+}
+function bitacoraForm(ses,blocks){
+ const n=(blocks||[]).length;
+ const cierre=ses.cierre||{};
+ return `<form id="carga-${esc(ses.id)}" class="carga-form" data-carga-id="${esc(ses.id)}"><input type="hidden" name="n" value="${n}">
+<p class="kicker">Bitácora de carga</p><p class="muted">Anota lo que hiciste hoy, no el plan.${n?'':' Esta sesión no tiene ejercicios de fuerza para anotar kilos.'}</p>
+<label><span class="kicker">¿Cómo salió?</span><select name="cierre"><option value="">Aún no anoto</option>${CIERRE.map(t=>`<option${cierre.como===t?' selected':''}>${t}</option>`).join('')}</select></label>
+<label><span class="kicker">RPE (opcional, 1 a 10)</span><input name="rpe" type="number" inputmode="numeric" min="1" max="10" step="1" value="${cierre.rpe??''}" placeholder="Ej. 8"></label>
+<button class="prim" type="submit">Guardar bitácora</button></form>`;
 }
 function bloque(name,source,purpose,items,min,max){return {name,source,purpose,items,min,max}}
 function hipertrofiaBlocks(musculo){
@@ -305,14 +379,15 @@ function trainingPlan(s,date){
  plan.middle=Math.floor((plan.cardio-firstCardio)/2);plan.last=plan.cardio-firstCardio-plan.middle;
  plan.margin=work;return plan;
 }
-function getSesiones(){
- const s=dia();
+function sesionesDe(date){
+ const raw=load(dayKey(date),{});
  let list;
- if(Array.isArray(s.sesiones))list=s.sesiones;
- else if(s.rama&&s.minutosTotal!==''&&s.minutosTotal!=null)list=[{rama:s.rama,musculo:s.musculo,distancia:s.distancia,pista400:s.pista400,vueltas400:s.vueltas400,tiempo400:s.tiempo400,cardioRecovery:s.cardioRecovery,minutosTotal:s.minutosTotal,minutosHechos:s.minutosHechos,cardioHecho:s.cardioHecho,hecho:s.hecho,id:s.id||'legacy'}];
+ if(Array.isArray(raw.sesiones))list=raw.sesiones;
+ else if(raw.rama&&raw.minutosTotal!==''&&raw.minutosTotal!=null)list=[{...raw,id:raw.id||'legacy'}];
  else list=[];
- return list.map((x,i)=>trainingChoice({rama:x.rama,musculo:x.musculo,distancia:x.distancia,pista400:x.pista400,vueltas400:x.vueltas400,tiempo400:x.tiempo400,cardioRecovery:x.cardioRecovery,minutosTotal:x.minutosTotal,minutosHechos:x.minutosHechos,cardioHecho:x.cardioHecho,hecho:x.hecho,id:x.id||('s-'+i)}));
+ return list.map((x,i)=>trainingChoice({...x,id:x.id||('s-'+i)}));
 }
+function getSesiones(){return sesionesDe(D)}
 function saveSesiones(sesiones,extra){
  if(editSesionId&&!sesiones.some(x=>x.id===editSesionId))editSesionId=null;
  return setDia({sesiones,hecho:sesiones.some(x=>x.hecho),rama:'',minutosTotal:'',minutosHechos:0,cardioHecho:0,musculo:'',distancia:'',pista400:'',vueltas400:'',tiempo400:'',cardioRecovery:'',id:'',...(extra||{})});
@@ -368,10 +443,10 @@ function suenoForm(s){
 function trainingPanel(){
  const s=dia(),sesiones=getSesiones();
  let h=`<p class="muted">¿Vas a entrenar?</p><div class="row">${opts(['Sí','No'],s.entrena,'entrena')}</div>`;
+ h+=weekVista(D);
  if(s.entrena==='Sí'){
-  const ya=weekMusculos(D);
   h+=hoyEvaluacion(s);
-  h+=ya.length?`<p class="muted">Esta semana ya anotaste: ${esc(ya.join(', '))}.</p>`:'<p class="muted">Esta semana aún no anotaste un músculo.</p>';
+  h+=ultimaSesionResumen(D);
   h+=`<form id="training-form" class="training-chooser"><label><span class="kicker">Tipo</span><select name="rama" required><option value="">Elige tu sesión…</option>${TIPOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
  <label id="musculo-field" hidden><span class="kicker">¿Qué músculo vas a entrenar?</span><select name="musculo"><option value="">Elige el músculo…</option>${MUSCULOS.map(t=>`<option>${esc(t)}</option>`).join('')}</select></label>
  ${distanciaField(null,false)}${pistaFields(null,false)}
@@ -423,10 +498,10 @@ function sessionAviso(ses){
 function sesion(p,ses){
  const tipo=ses.rama;
  const titulo=p.recovery?(p.name||tipo):sesionTitulo(ses);
- let h=`<article class="training-session"><p class="kicker">Tu sesión · ${p.remaining} min por hacer</p><h3>${esc(titulo)}</h3>`+sessionAviso(ses);
+ let h=`<article class="training-session"><p class="kicker">Tu sesión · ${p.remaining} min por hacer</p><h3>${esc(titulo)}</h3>`+sessionAviso(ses)+ultimaCargasDe(ses,p.blocks,D);
 
  if(!p.blocks.length&&!p.recovery)h+='<p class="muted">Los ejercicios se arman contigo. Todavía no hay un listado cargado para esta sesión.</p>';
- if(!p.remaining)return h+'<p>No queda tiempo pendiente. No se añade otro entreno. Puedes cerrar la sesión y grabar tu registro en Hoy.</p></article>';
+ if(!p.remaining)return h+'<p>No queda tiempo pendiente. No se añade otro entreno. Puedes cerrar la sesión y grabar tu registro en Hoy.</p>'+bitacoraForm(ses,p.blocks)+'</article>';
  h+=`<section class="session-block"><h4>Elongación · dinámica</h4><p>${p.dynamic?p.dynamic+' min: '+p.preparation.dynamic:'Pendiente hasta elevar temperatura; no se fuerza en frío.'}</p></section>`;
  h+=`<p class="muted">Orden real: primero 5–10 min para elevar temperatura, después dinámica y preparación específica. Nada de elongación intensa en frío. <a href="${FUENTES.hss}" target="_blank" rel="noopener">HSS</a>.</p>
  <section class="session-block"><h4>Calentamiento · general + específico</h4><p>${p.warm?`${p.warm} min: ${p.preparation.warm}.`:p.warmDone?'Ya calentaste: se omite la entrada general. Si te enfriaste, vuelve a calentar antes de cargar.':'Sin tiempo para preparar carga: no hagas fuerza ni sprints.'} ${p.warm&&p.warm<5?'Solo movimiento fácil: el tiempo no alcanza para preparar fuerza.':''} ${p.specific?`Después de la dinámica, ${p.specific} min: ${p.preparation.specific}`:''}</p><p class="source">Preparación: HSS.</p></section>`;
@@ -435,10 +510,10 @@ function sesion(p,ses){
  const cardioMode=p.cardioMode||(tipo==='Hipertrofia'?(ses.musculo==='Piernas'?'bicicleta fácil':'remo suave'):tipo==='CrossFit'?'bicicleta fácil':'marcha / trote conversacional; camina si hace falta');
  const cardioSrc=p.recovery?'Recovery day · cardio ligero':tipo==='Hipertrofia'?'Cardio general':tipo==='CrossFit'?'Cardio general':'Cardio general';
  const cardioBlock=(n,label)=>n?`<section class="cardio"><h4>${label} · ${n} min</h4><p>${cardioMode}. ${p.recovery?'Ritmo conversacional, sin buscar fatiga.':''} ${!p.recovery&&(tipo==='Híbrido'||p.run)?'Apoyo a tu prueba de trote: construir tolerancia, no correr al ritmo de competencia.':''}</p><p class="source">${cardioSrc}.</p></section>`:'';
- p.blocks.forEach((b,i)=>{h+=`<section class="session-block"><h4>${i+1}. ${b.name} · hasta ${b.minutes} min</h4><p class="source">Base: ${b.source} · ${b.purpose}.</p><ul>${b.items.map(x=>`<li>${x}</li>`).join('')}</ul><p class="muted">Descansa 60–120 s o más. El tiempo incluye descanso y transiciones; si no alcanza, quita una serie, no el descanso.</p></section>`});
+ p.blocks.forEach((b,i)=>{h+=`<section class="session-block"><h4>${i+1}. ${b.name} · hasta ${b.minutes} min</h4><p class="source">Base: ${b.source} · ${b.purpose}.</p><ul>${b.items.map(x=>`<li>${x}</li>`).join('')}</ul>${cargaInputs(ses,b.name,i)}<p class="muted">Descansa 60–120 s o más. El tiempo incluye descanso y transiciones; si no alcanza, quita una serie, no el descanso.</p></section>`});
  h+=cardioBlock((p.middle||0)+(p.last||0),'Cardio general del entrenamiento');
  h+=`<section class="session-block"><h4>Elongación estática · salida</h4><p>${p.exit?p.exit+' min reservados.':'Sin tiempo reservado: déjala para después, con el cuerpo caliente.'} ${p.preparation.static} Sostén suave 20–30 s por lado, sin rebotes; completa aparte si no cabe. No se hace en frío. Base: HSS.</p></section>
- <p class="muted">${p.recovery?'Recovery day: cardio ligero, sin fuerza ni series pesadas.':p.blocks.length?'Carga: la de hoy, 3–4 repeticiones en reserva. No porcentajes de tus marcas antiguas.':''} ${p.margin?`${p.margin} min quedan como margen: no es obligación llenarlos.`:''} ${p.blocks.length?'Los accesorios salen primero si falta tiempo. ':''}Para si duele la rodilla o la lumbar; ante mareo, dolor de pecho o falta de aire desproporcionada, detén y consulta.</p></article>`;
+ <p class="muted">${p.recovery?'Recovery day: cardio ligero, sin fuerza ni series pesadas.':p.blocks.length?'Carga: la de hoy, 3–4 repeticiones en reserva. No porcentajes de tus marcas antiguas.':''} ${p.margin?`${p.margin} min quedan como margen: no es obligación llenarlos.`:''} ${p.blocks.length?'Los accesorios salen primero si falta tiempo. ':''}Para si duele la rodilla o la lumbar; ante mareo, dolor de pecho o falta de aire desproporcionada, detén y consulta.</p>`+bitacoraForm(ses,p.blocks)+`</article>`;
  return h;
 }
 
@@ -744,6 +819,44 @@ document.addEventListener('submit',e=>{
   const extras=rama==='Trote'?readTroteFields(f):{distancia:'',pista400:'',vueltas400:'',tiempo400:''};
   const ses={id:'s'+Date.now(),rama,musculo:rama==='Hipertrofia'?musculo:'',...extras,minutosTotal:total,minutosHechos:0,cardioHecho:0,hecho:false};
   return saveSesiones([...getSesiones(),ses],{entrena:''});
+ }
+ if(e.target.dataset.cargaId){
+  e.preventDefault();
+  const id=e.target.dataset.cargaId,f=new FormData(e.target),n=Number(f.get('n'))||0;
+  const cargas=[];
+  for(let i=0;i<n;i++){
+   const name=(f.get('name-'+i)||'').trim();
+   if(!name)continue;
+   const seriesRaw=(f.get('series-'+i)||'').trim();
+   const kgRaw=(f.get('kg-'+i)||'').trim();
+   const reps=(f.get('reps-'+i)||'').trim();
+   let series='';
+   if(seriesRaw!==''){
+    const sN=Number(seriesRaw);
+    if(!Number.isSafeInteger(sN)||sN<0)return alert('Las series de '+name+' tienen que ser un número entero desde cero.');
+    series=sN;
+   }
+   let kg='';
+   if(kgRaw!==''){
+    const k=Number(kgRaw.replace(',','.'));
+    if(!Number.isFinite(k)||k<0)return alert('Los kilos de '+name+' tienen que ser un número válido.');
+    kg=kgRaw.replace('.',',');
+   }
+   cargas.push({name,series,kg,reps});
+  }
+  const como=f.get('cierre')||'';
+  if(como&&!CIERRE.includes(como))return alert('Elige cómo salió la sesión.');
+  const rpeRaw=(f.get('rpe')||'').trim();
+  let rpe='';
+  if(rpeRaw!==''){
+   const r=Number(rpeRaw);
+   if(!Number.isSafeInteger(r)||r<1||r>10)return alert('El RPE va de 1 a 10.');
+   rpe=r;
+  }
+  const sesiones=getSesiones(),idx=sesiones.findIndex(x=>String(x.id)===String(id));
+  if(idx<0)return;
+  sesiones[idx]={...sesiones[idx],cargas,cierre:{como,rpe}};
+  return saveSesiones(sesiones);
  }
  if(e.target.id==='recovery-form'){
   e.preventDefault();const f=new FormData(e.target),total=Number(f.get('total')),cardio=f.get('cardio');

@@ -136,3 +136,9 @@ summary{cursor:pointer;color:var(--sand-hi);font-size:.88rem}
 .training-log li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(190,172,138,.16);font-size:.95rem}
 .training-log .log-text{flex:1;min-width:12rem}
 .training-log .log-actions{display:flex;gap:8px}
+
+.carga-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.carga-row label,.carga-row input{min-width:0}
+.carga-form{display:grid;gap:14px;margin:16px 0 0}
+.week-log{list-style:none;padding:0;margin:0 0 12px}
+.week-log li{padding:8px 0;border-bottom:1px solid rgba(190,172,138,.16);font-size:.95rem}
