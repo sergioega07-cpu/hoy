@@ -41,7 +41,7 @@ function weightCard(){
  <p class="muted">Datos guardados solo en este navegador.</p></section>`;
 }
 
-// ---------- Entrenamiento: Trote / Híbrido (hipertrofia → Gimnasio; CrossFit → pestaña CrossFit) ----------
+// ---------- Entrenamiento en Hoy: Trote / Híbrido (hipertrofia → Gimnasio; CrossFit → CrossFit; VDOT → Trote) ----------
 const TIPOS=['Trote','Híbrido'];
 // MUSCULOS + hipertrofiaBlocks se conservan: historial hoy:* y seed de openGym (gimnasio-src/temploSeed.js)
 // trainingBase('CrossFit') se conserva para sesiones legacy hoy:*; no se ofrece al crear.
@@ -449,7 +449,7 @@ function trainingPanel(){
  const s=dia(),sesiones=getSesiones();
  let h=`<p class="muted">¿Vas a entrenar?</p><div class="row">${opts(['Sí','No'],s.entrena,'entrena')}</div>`;
  h+=weekVista(D);
- h+='<p class="muted">Hipertrofia y bitácora de kilos: pestaña <button type="button" data-go="gimnasio">Gimnasio</button>. WODs y semanas CF: <button type="button" data-go="crossfit">CrossFit</button>.</p>';
+ h+='<p class="muted">Hipertrofia y bitácora de kilos: pestaña <button type="button" data-go="gimnasio">Gimnasio</button>. WODs y semanas CF: <button type="button" data-go="crossfit">CrossFit</button>. VDOT/ritmos: <button type="button" data-go="trote">Trote</button>.</p>';
  if(s.entrena==='Sí'){
   h+=hoyEvaluacion(s);
   h+=ultimaSesionResumen(D);
@@ -664,6 +664,7 @@ function vHoy(){
  ${s.rec?'':'<p class="muted">Sin tu sensación muscular no se arma un entrenamiento.</p>'}
  ${s.rec==='Rojo'?'<p class="muted">Sensación muscular en rojo: considera la versión corta o solo cardio fácil. Tú decides.</p>':''}</section>
  <section class="card"><h2>Estudio</h2><p>${CALC.t}</p><button data-go="estudiar">Desarrollar</button> ${s.calc?`<span class="muted">· ${s.calc}</span>`:''}</section>
+ <section class="card"><h2>Tu entrenamiento</h2>${trainingPanel()}</section>
  ${espiritualLectura(s,false)}`;
  return h;
 }
@@ -684,9 +685,16 @@ function vCrossfit(){
  crossfitAltura();
  return `<iframe class="crossfit-frame" src="./crossfit/index.html" title="CrossFit (garage-wod)"></iframe>`;
 }
+function troteAltura(){const r=document.documentElement.style,bajo=innerHeight<520;r.setProperty('--top-h',(bajo?0:$('.top').getBoundingClientRect().bottom)+'px');r.setProperty('--tabs-h',$('.tabs').offsetHeight+'px')}
+addEventListener('resize',()=>{if(tab==='trote')troteAltura()});
+function vTrote(){
+ troteAltura();
+ return `<iframe class="trote-frame" src="./trote/index.html" title="Trote (vdot)"></iframe>`;
+}
 
 function vEntrenar(){
- return `<section class="card"><h2>Tu entrenamiento</h2>${trainingPanel()}</section>`;
+ // Pestaña retirada: redirige a Hoy vía render(); se conserva por si un enlace legacy llama la vista.
+ return vHoy();
 }
 function vEstudiar(){
  const s=dia();
@@ -725,13 +733,16 @@ function render(){
  $('#fecha').textContent=fmt(D);
  // Comida pausada (2026-11-09): carpeta ./comida/ y datos se conservan; sin pestaña ni Macros de hoy
  if(tab==='comida')tab='hoy';
+ // Entrenar absorbido en Hoy (2026-11-09): pestaña retirada; tab forzada cae a Hoy
+ if(tab==='entrenar')tab='hoy';
  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
- const vistas={hoy:vHoy,gimnasio:vGimnasio,crossfit:vCrossfit,entrenar:vEntrenar,estudiar:vEstudiar,espiritual:vEspiritual};
+ const vistas={hoy:vHoy,gimnasio:vGimnasio,crossfit:vCrossfit,trote:vTrote,estudiar:vEstudiar,espiritual:vEspiritual};
  $('#view').innerHTML=(vistas[tab]||vHoy)();
  if(tab==='gimnasio')gimnasioAltura();
  if(tab==='crossfit')crossfitAltura();
+ if(tab==='trote')troteAltura();
  if(tab==='espiritual')showAudio(D);
- if(tab==='hoy'||tab==='entrenar'){
+ if(tab==='hoy'){
   getSesiones().filter(x=>x.hecho).forEach(x=>showAudio('entreno:'+D+':'+x.id));
   if(dia().hecho)showAudio('entreno:'+D);
  }

@@ -154,3 +154,5 @@ summary{cursor:pointer;color:var(--sand-hi);font-size:.88rem}
 .gimnasio-frame{position:fixed;left:0;right:0;top:var(--top-h,140px);width:100%;height:calc(100vh - var(--top-h,140px) - var(--tabs-h,64px));height:calc(100dvh - var(--top-h,140px) - var(--tabs-h,64px));border:0;z-index:4;background:transparent}
 /* CrossFit: garage-wod en ./crossfit/ */
 .crossfit-frame{position:fixed;left:0;right:0;top:var(--top-h,140px);width:100%;height:calc(100vh - var(--top-h,140px) - var(--tabs-h,64px));height:calc(100dvh - var(--top-h,140px) - var(--tabs-h,64px));border:0;z-index:4;background:transparent}
+/* Trote: vdot en ./trote/ */
+.trote-frame{position:fixed;left:0;right:0;top:var(--top-h,140px);width:100%;height:calc(100vh - var(--top-h,140px) - var(--tabs-h,64px));height:calc(100dvh - var(--top-h,140px) - var(--tabs-h,64px));border:0;z-index:4;background:transparent}
