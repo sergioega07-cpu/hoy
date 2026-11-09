@@ -61,3 +61,16 @@ body[class*="color-theme-"], body[class*="color-theme-"] * {
 .subnavbar { background:rgba(8,6,5,.72) !important; }
 .toolbar-bottom, .toolbar { background:rgba(8,6,5,.72) !important; }
 @media (max-height: 520px) { .page[data-name="diary-chart"] .page-content > div:first-child { padding-top:8px !important; width:min(300px, 100%); } }
+/* Tarjeta de objetivo (Templo) arriba del Diario */
+.templo-card .templo-objetivo { font-family:"Cinzel","Times New Roman",serif; color:#beac8a; letter-spacing:.04em; margin-bottom:4px; }
+.templo-nota { font-family:"Cormorant Garamond",Georgia,serif; font-style:italic; color:#a89878; font-size:.85em; margin-bottom:10px; }
+.templo-fila { margin:8px 0 10px; }
+.templo-fila-top { display:flex; justify-content:space-between; font-size:.92em; }
+.templo-fila-top span:last-child { color:#d8c8a6; }
+.templo-barra { height:6px; border-radius:3px; background:rgba(190,172,138,.18); overflow:hidden; margin:4px 0 2px; }
+.templo-barra span { display:block; height:100%; background:#beac8a; border-radius:3px; }
+.templo-quedan { font-family:"Cormorant Garamond",Georgia,serif; font-style:italic; color:#ddcfb2; font-size:.95em; }
+.templo-sin-meta { font-size:.85em; color:#beac8a; text-decoration:underline; }
+.qa-sheet { background:#241c16 !important; }
+.qa-preview b { color:#d8c8a6; font-size:1.15em; }
+.qa-nombre { font-family:"Cinzel","Times New Roman",serif; color:#beac8a; font-size:1.15em; margin:0 0 4px; }

@@ -169,6 +169,12 @@ const app = {
           options: {
             transition: "f7-parallax"
           }
+        },
+        {
+          // Templo: Agregar rápido (buscar + gramos + Agregar en una pantalla)
+          name: "Quick Add",
+          path: "/quick-add/",
+          url: "activities/quick-add/views/quick-add.html"
         }]
       },
       {

@@ -1,7 +1,7 @@
 /*
   cordova.js — reemplazo mínimo para correr Waistline (www/) como página web dentro de Templo.
   No es el cordova.js original: solo declara la plataforma "browser" (que Waistline ya soporta),
-  prepara la configuración inicial en español con las metas de Templo, migra una vez las comidas
+  prepara la configuración inicial en español con las metas de Charles (si están vacías), migra una vez las comidas
   antiguas de Templo al diario de Waistline y luego dispara "deviceready".
   Parte de Templo; se distribuye bajo GPL-3.0 o posterior junto con Waistline.
 */
@@ -20,7 +20,42 @@ window.TTS = {
 (function() {
   const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch (e) { return d } };
 
-  // Primera vez: configuración por defecto de Waistline + español, modo oscuro, comidas de Templo y metas de Sergio
+  // Charles (L–S, entrene o no): kcal referencia estimada; proteína meta firme.
+  // Solo rellena macros sin meta (>0). Nunca sobrescribe un valor ya puesto.
+  const CHARLES = { calories: "1870", proteins: "205", carbohydrates: "135", fat: "50" };
+  function goalPositivo(stat) {
+    const list = (stat && stat["goal-list"]) || [];
+    const x = list[list.length - 1];
+    if (!x || !x.goal) return false;
+    if (x["shared-goal"]) return parseFloat(x.goal[0]) > 0;
+    return x.goal.some(v => parseFloat(v) > 0);
+  }
+  function aplicarMetasCharles(s, m) {
+    if (!s || !s.goals) return false;
+    const map = { calories: "k", proteins: "p", carbohydrates: "c", fat: "f" };
+    let cambio = false;
+    for (const stat in CHARLES) {
+      if (goalPositivo(s.goals[stat])) continue; // no tocar meta existente
+      const fromHoy = m && m[map[stat]];
+      const v = fromHoy > 0 ? String(fromHoy) : CHARLES[stat];
+      s.goals[stat] = s.goals[stat] || {};
+      s.goals[stat]["show-in-diary"] = true;
+      s.goals[stat]["show-in-stats"] = true;
+      s.goals[stat]["goal-list"] = [{ "shared-goal": true, goal: [v, "", "", "", "", "", ""] }];
+      cambio = true;
+    }
+    return cambio;
+  }
+  // Usuarios que ya tienen settings pero con metas vacías: rellenar Charles
+  function metasCharlesSiVacias() {
+    const s = load("settings", null);
+    if (!s) return;
+    if (!aplicarMetasCharles(s, load("hoy:metas", {}))) return;
+    localStorage.setItem("settings", JSON.stringify(s));
+    settings = s;
+  }
+
+  // Primera vez: configuración por defecto de Waistline + español, modo oscuro, comidas de Templo y metas de Charles
   function primeraConfig() {
     if (localStorage.getItem("settings") !== null) return;
     app.Settings.firstTimeSetup();
@@ -33,12 +68,13 @@ window.TTS = {
     s.integration["search-language"] = "es";
     s.integration["search-country"] = "Chile";
     s.integration["usda-key"] = "DEMO_KEY"; // clave pública de demostración de api.data.gov
-    // Metas: solo las que Sergio escribió en Templo (hoy:metas); nada inventado
+    // Primera vez: pisar defaults de Waistline con hoy:metas o Charles (L–S)
     const m = load("hoy:metas", {});
     const map = { calories: "k", proteins: "p", carbohydrates: "c", fat: "f" };
-    for (const stat in map) {
-      const v = m[map[stat]];
-      s.goals[stat]["goal-list"] = [{ "shared-goal": true, goal: [v > 0 ? String(v) : "", "", "", "", "", "", ""] }];
+    for (const stat in CHARLES) {
+      const fromHoy = m[map[stat]];
+      const v = fromHoy > 0 ? String(fromHoy) : CHARLES[stat];
+      s.goals[stat]["goal-list"] = [{ "shared-goal": true, goal: [v, "", "", "", "", "", ""] }];
     }
     s.goals.kilojoules["show-in-diary"] = false;
     s.goals.kilojoules["goal-list"] = [{ "shared-goal": true, goal: ["", "", "", "", "", "", ""] }];
@@ -100,8 +136,14 @@ window.TTS = {
   }
 
   window.addEventListener("load", async () => {
-    try { primeraConfig(); offEnEspanol(); } catch (e) { console.log("config", e); }
+    try { primeraConfig(); metasCharlesSiVacias(); offEnEspanol(); } catch (e) { console.log("config", e); }
     try { await dbHandler.initializeDb(); await migrarTemplo(); } catch (e) { console.log("migración", e); }
+    // Desde Hoy, "Sin meta — ponla en Objetivos" abre directo la pantalla de Objetivos
+    if (localStorage.getItem("hoy:irObjetivos")) {
+      localStorage.removeItem("hoy:irObjetivos");
+      const ir = (e) => { if (e.target.matches(".page[data-name='diary']")) { document.removeEventListener("page:afterin", ir); app.f7.views.main.router.navigate("/goals/"); } };
+      document.addEventListener("page:afterin", ir);
+    }
     document.dispatchEvent(new Event("deviceready"));
   });
 })();

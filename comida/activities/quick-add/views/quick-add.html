@@ -1,0 +1,32 @@
+<!--
+  Templo — Agregar rápido (sobre Waistline, GPL-3.0 o posterior).
+  Una sola pantalla: buscar, tocar un resultado, escribir los gramos y Agregar.
+-->
+<div class="page" data-name="quick-add">
+  <div class="navbar">
+    <div class="navbar-bg"></div>
+    <div class="navbar-inner">
+      <div class="left">
+        <a href="#" class="link back"><i class="icon icon-back"></i></a>
+      </div>
+      <div class="title" id="qa-title">Agregar</div>
+    </div>
+  </div>
+  <div class="page-content">
+    <form class="list inset" id="qa-form" style="margin-top:12px">
+      <ul>
+        <li class="item-content item-input">
+          <div class="item-inner">
+            <div class="item-input-wrap">
+              <input type="search" id="qa-q" placeholder="Buscar alimento (ej. yogur)" enterkeyhint="search" autocomplete="off">
+            </div>
+          </div>
+          <div class="item-media"><a href="#" class="button button-fill" id="qa-buscar">Buscar</a></div>
+        </li>
+      </ul>
+    </form>
+    <div class="block-title" id="qa-lista-titulo">Tus alimentos</div>
+    <div class="list media-list" id="qa-lista"><ul></ul></div>
+    <div class="block" id="qa-estado"></div>
+  </div>
+</div>

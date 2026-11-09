@@ -556,22 +556,17 @@ function metas(d){
  }
  return load('hoy:metas',{});
 }
+// Misma tarjeta que arriba del Diario de Comida: objetivo de peso, metas de Waistline y lo que queda
 async function resumen(d){
- const t=await totals(d),g=metas(d),lab={p:'Proteína',c:'Carbos',f:'Grasas',k:'kcal'};
- const conMacros=['p','c','f','k'].some(k=>t[k]>0);
- const set=['p','c','f','k'].filter(k=>g[k]>0);
- const caja=vals=>`<div class="macros">${['p','c','f','k'].map(k=>`<div><b>${Math.round(vals[k])}</b>${lab[k]}${k!=='k'?' g':''}</div>`).join('')}</div>`;
- let h='';
- if(set.length){
-  h+=`<p class="muted">A consumir hoy</p><div class="macros">${set.map(k=>`<div><b>${g[k]%1?String(g[k]).replace('.',','):g[k]}</b>${lab[k]}${k!=='k'?' g':''}</div>`).join('')}</div>`;
-  if(conMacros){
-   h+='<p class="muted">Consumido hasta ahora</p>'+caja(t);
-   h+='<ul>'+set.map(k=>{const diff=t[k]-g[k];return `<li>${lab[k]}: ${diff>=0?`<span class="ok">alcanza</span> (+${Math.round(diff)})`:`<span class="falta">falta ${Math.round(-diff)}${k!=='k'?' g':''}</span>`} de ${g[k]}</li>`}).join('')+'</ul>';
-  }
- }else{
-  h+='<p class="muted">Aún no hay metas de macros. Se anotan en Comida → menú → Metas; no se inventan.</p>';
-  if(conMacros)h+='<p class="muted">Consumido hasta ahora</p>'+caja(t);
- }
+ const t=await totals(d),g=metas(d),rec=weightRecords().slice().sort((a,b)=>a.date<b.date?1:-1);
+ const peso=kgFmt(rec.length?rec[0].kg:88.9);
+ let h=`<p class="accent">Objetivo: bajar de ${peso} a 79–81 kg</p><p class="muted meta-nota">kcal: referencia estimada · proteína: meta firme</p>`;
+ h+=[['k','kcal',''],['p','Proteína',' g'],['c','Carbohidratos',' g'],['f','Grasa',' g']].map(([k,l,u])=>{
+  const c=t[k]||0,m=g[k];
+  if(!(m>0))return `<div class="meta-fila"><div class="meta-top"><span>${l}</span><span>${Math.round(c)}${u}</span></div><button class="sm" data-objetivos>Sin meta — ponla en Objetivos</button></div>`;
+  const q=m-c;
+  return `<div class="meta-fila"><div class="meta-top"><span>${l}</span><span>${Math.round(c)} / ${Math.round(m)}${u}</span></div><div class="meta-barra"><span style="width:${Math.min(100,c/m*100)}%"></span></div><p class="muted">${q>=0?'te quedan '+Math.round(q)+u:'pasaste '+Math.round(-q)+u}</p></div>`;
+ }).join('');
  return h;
 }
 async function fillMacrosHoy(){const el=$('#macros-hoy');if(!el)return;let h=await resumen(D);
@@ -710,6 +705,7 @@ document.addEventListener('click',async e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  if(d.t){tab=d.t;render();scrollTo(0,0);return}
  if(d.go){tab=d.go;render();scrollTo(0,0);return}
+ if('objetivos' in d){localStorage.setItem('hoy:irObjetivos','1');tab='comida';render();scrollTo(0,0);return}
  if(d.animo)return setDia({animo:d.animo});
  if(d.rec)return setDia({rec:d.rec});
  if(d.entrena)return setDia({entrena:d.entrena,descanso:d.entrena==='Sí'?'':dia().descanso});
